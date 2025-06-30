@@ -1357,7 +1357,14 @@ pub fn lint_group() -> LintGroup {
             ["thanks lot", "thanks alot"],
             ["thanks a lot"],
             "Prefer the two-word expression `thanks a lot`.",
-            "`Thanks a lot` is the fixed, widely accepted form, while variants like `thanks lot` or `thanks alot` are non-standard and can jar readers.")
+            "`Thanks a lot` is the fixed, widely accepted form, while variants like `thanks lot` or `thanks alot` are non-standard and can jar readers."
+        ),
+        "ToWorryAbout" => (
+            ["to worried about"],
+            ["to worry about", "too worried about"],
+            "Did you mean the progressive form?",
+            "Fixes incorrect use of `to worried about`."
+        )
     });
 
     group.set_all_rules_to(Some(true));

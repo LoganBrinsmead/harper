@@ -23,6 +23,7 @@ mod correct_number_suffix;
 mod currency_placement;
 mod dashes;
 mod despite_of;
+mod determiner_without_noun;
 mod dot_initialisms;
 mod ellipsis_length;
 mod else_possessive;
