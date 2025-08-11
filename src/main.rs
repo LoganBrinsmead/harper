@@ -1,5 +1,6 @@
 mod mirror;
 
+use clap::Parser;
 use harper_brill::UPOS;
 use harper_core::Document;
 use harper_core::expr::{ExprExt, SequenceExpr};
@@ -12,9 +13,21 @@ use strum::IntoEnumIterator;
 
 use self::mirror::{Mirror, MirrorAtom};
 
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    /// The ratio of children to generate for each generation
+    #[arg(short, long, default_value_t = 10000)]
+    child_ratio: usize,
+
+    /// The minimum population size to maintain
+    #[arg(short, long, default_value_t = 10)]
+    min_pop: usize,
+}
+
 fn main() {
-    let child_ratio = 10000;
-    let min_pop = 10;
+    let args = Args::parse();
+
     let dict = FstDictionary::curated();
 
     let mut mirs = vec![Mirror {
@@ -32,12 +45,16 @@ fn main() {
             );
         }
 
-        mirs.truncate(min_pop);
+        mirs.truncate(args.min_pop);
 
         let mut perm_mirs = Vec::new();
 
         for mir in &mirs {
-            perm_mirs.append(&mut permute_mirror_unique(mir, child_ratio, &dict));
+            perm_mirs.append(&mut permute_mirror_unique(
+                mir,
+                args.child_ratio,
+                &dict,
+            ));
         }
 
         mirs.append(&mut perm_mirs);
