@@ -1,7 +1,5 @@
 mod mirror;
 
-use std::collections::HashSet;
-
 use harper_brill::UPOS;
 use harper_core::Document;
 use harper_core::expr::{ExprExt, SequenceExpr};
@@ -10,7 +8,6 @@ use harper_core::spell::{Dictionary, FstDictionary};
 use rand::seq::IndexedRandom;
 use rand::{Rng, seq::SliceRandom};
 use rayon::slice::ParallelSliceMut;
-use serde_json::to_string;
 use strum::IntoEnumIterator;
 
 use self::mirror::{Mirror, MirrorAtom};
@@ -182,12 +179,9 @@ fn random_non_ws_atom(pool: &[String], rng: &mut impl Rng) -> MirrorAtom {
 }
 
 fn random_upos_set(rng: &mut impl Rng) -> UPOSSet {
-    let k = rng.gen_range(1..=3);
-    let mut v: Vec<UPOS> = UPOS::iter()
-        .collect::<Vec<_>>()
-        .choose_multiple(rng, k)
-        .cloned()
-        .collect();
+    let v = UPOS::iter().collect::<Vec<_>>();
+    let k = rng.gen_range(1..v.len());
+    let mut v: Vec<UPOS> = v.choose_multiple(rng, k).cloned().collect();
     v.sort_unstable();
     UPOSSet::new(&v)
 }
