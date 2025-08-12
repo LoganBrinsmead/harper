@@ -32,6 +32,10 @@ struct Args {
     /// A file containing newline-separated sentences that should not be flagged
     #[arg(long)]
     clean_file: String,
+
+    /// The number of generations to run
+    #[arg(short, long)]
+    generations: usize,
 }
 
 fn main() {
@@ -46,7 +50,7 @@ fn main() {
         seq: vec![MirrorAtom::AllowedWords(vec!["too".to_string()])],
     }];
 
-    for i in 0..200 {
+    for _i in 0..args.generations {
         mirs.par_sort_by_cached_key(|s| {
             let score = score(&s.to_seq_expr(), &problems, &clean);
             usize::MAX - score
