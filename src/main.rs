@@ -41,8 +41,8 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    let problems = load_sentences(&args.problem_file);
-    let clean = load_sentences(&args.clean_file);
+    let problems = load_documents(&args.problem_file);
+    let clean = load_documents(&args.clean_file);
 
     let mut mirs = vec![Mirror {
         seq: vec![MirrorAtom::Word("too".to_string())],
@@ -77,24 +77,22 @@ fn main() {
     }
 }
 
-fn load_sentences(path: &str) -> Vec<String> {
+fn load_documents(path: &str) -> Vec<Document> {
     fs::read_to_string(path)
         .expect("Unable to read file")
         .lines()
-        .map(|s| s.to_string())
+        .map(|s| Document::new_plain_english_curated(s))
         .collect()
 }
 
-fn score(candidate: &SequenceExpr, problems: &[String], clean: &[String]) -> usize {
+fn score(candidate: &SequenceExpr, problems: &[Document], clean: &[Document]) -> usize {
     let mut correct = 0;
 
     let mut matches = Vec::new();
 
     for problem in problems {
-        let doc = Document::new_plain_english_curated(&problem);
-
         matches.clear();
-        matches.extend(candidate.iter_matches_in_doc(&doc));
+        matches.extend(candidate.iter_matches_in_doc(problem));
 
         if matches.len() == 1 {
             correct += 1;
@@ -102,9 +100,7 @@ fn score(candidate: &SequenceExpr, problems: &[String], clean: &[String]) -> usi
     }
 
     for clean in clean {
-        let doc = Document::new_plain_english_curated(&clean);
-
-        if candidate.iter_matches_in_doc(&doc).count() == 0 {
+        if candidate.iter_matches_in_doc(clean).count() == 0 {
             correct += 1;
         }
     }
