@@ -36,6 +36,10 @@ struct Args {
     /// The number of generations to run
     #[arg(short, long)]
     generations: usize,
+
+    /// The maximum number of mutations to apply to a child
+    #[arg(long, default_value_t = 5)]
+    max_mutations: usize,
 }
 
 fn main() {
@@ -67,9 +71,11 @@ fn main() {
         let mut perm_mirs = Vec::new();
 
         for mir in &mirs {
-            perm_mirs.append(
-                &mut mir.create_children_with_mutations(args.child_ratio, &mut rand::rng()),
-            );
+            perm_mirs.append(&mut mir.create_children_with_mutations(
+                args.child_ratio,
+                args.max_mutations,
+                &mut rand::thread_rng(),
+            ));
         }
 
         mirs.append(&mut perm_mirs);
@@ -79,7 +85,7 @@ fn main() {
 
 fn load_documents(path: &str) -> Vec<Document> {
     fs::read_to_string(path)
-        .expect("Unable to read file")
+        .expect("Unable to read file.")
         .lines()
         .map(|s| Document::new_plain_english_curated(s))
         .collect()

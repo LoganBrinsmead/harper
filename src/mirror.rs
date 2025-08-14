@@ -43,13 +43,19 @@ impl Mirror {
     pub fn create_children_with_mutations(
         &self,
         child_count: usize,
+        max_mutations: usize,
         rng: &mut impl Rng,
     ) -> Vec<Self> {
         let mut children = Vec::with_capacity(child_count);
 
         for _ in 0..child_count {
             let mut child = self.clone();
-            child.mutate(rng);
+            let mutation_count = rng.gen_range(1..=max_mutations);
+
+            for _ in 0..mutation_count {
+                child.mutate(rng);
+            }
+
             children.push(child);
         }
 
