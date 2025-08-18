@@ -54,19 +54,35 @@ fn main() {
         }],
     }];
 
-    for _i in 0..args.generations {
+    let mut last_best_score = 0;
+
+    for i in 0..args.generations {
         mirs.par_sort_by_cached_key(|s| {
             let score = score(&s, &problems, &clean);
             usize::MAX - score
         });
 
-        for i in 0..1.min(mirs.len()) {
-            dbg!(
-                &mirs[i],
-                score(&mirs[i], &problems, &clean),
-                max_possible_score(&problems, &clean),
-            );
+        let best_score = if let Some(best_mir) = mirs.first() {
+            score(best_mir, &problems, &clean)
+        } else {
+            0
+        };
+
+        let delta = best_score as i64 - last_best_score as i64;
+
+        println!(
+            "Generation {:<4} | Best Score: {:<10} | Max Score: {:<10} | Delta: {:<+10}",
+            i,
+            best_score,
+            max_possible_score(&problems, &clean),
+            delta
+        );
+
+        if let Some(best_mir) = mirs.first() {
+            println!("Best mirror: {:#?}", best_mir);
         }
+
+        last_best_score = best_score;
 
         mirs.truncate(args.min_pop);
 
@@ -82,7 +98,7 @@ fn main() {
 
         mirs.append(&mut perm_mirs);
 
-        mirs.shuffle(&mut rand::rng());
+        mirs.shuffle(&mut rand::thread_rng());
     }
 }
 
@@ -134,14 +150,14 @@ fn score(candidate: &Mirror, problems: &[Document], clean: &[Document]) -> usize
         }
     }
 
-    const TIE_SCALE: usize = 500;
+    const TIE_SCALE: usize = 25;
     let simplicity_bonus = TIE_SCALE.saturating_sub(mirror_complexity(candidate).min(TIE_SCALE));
 
     correct.saturating_mul(TIE_SCALE) + simplicity_bonus
 }
 
 pub fn max_possible_score(problems: &[Document], clean: &[Document]) -> usize {
-    const TIE_SCALE: usize = 500;
+    const TIE_SCALE: usize = 25;
     let per_problem = 50usize;
     let per_clean = 100usize;
 
