@@ -129,14 +129,14 @@ fn score(candidate: &Mirror, problems: &[Document], clean: &[Document]) -> usize
         }
     }
 
-    const TIE_SCALE: usize = 1_000;
+    const TIE_SCALE: usize = 500;
     let simplicity_bonus = TIE_SCALE.saturating_sub(mirror_complexity(candidate).min(TIE_SCALE));
 
     correct.saturating_mul(TIE_SCALE) + simplicity_bonus
 }
 
 pub fn max_possible_score(problems: &[Document], clean: &[Document]) -> usize {
-    const TIE_SCALE: usize = 1_000;
+    const TIE_SCALE: usize = 500;
     let per_problem = 1usize;
     let per_clean = 100usize;
 
