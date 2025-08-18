@@ -7,10 +7,9 @@ use harper_core::expr::{ExprExt, SequenceExpr};
 use harper_core::patterns::UPOSSet;
 use harper_core::spell::{Dictionary, FstDictionary};
 use rand::seq::IndexedRandom;
-use rand::{Rng, seq::SliceRandom};
+use rand::seq::SliceRandom;
 use rayon::slice::ParallelSliceMut;
 use std::fs;
-use strum::IntoEnumIterator;
 
 use self::mirror::{Mirror, MirrorAtom};
 
@@ -49,7 +48,7 @@ fn main() {
     let clean = load_documents(&args.clean_file);
 
     let mut mirs = vec![Mirror {
-        seq: vec![MirrorAtom::Word("too".to_string())],
+        seq: vec![MirrorAtom::Word("to".to_string())],
     }];
 
     for _i in 0..args.generations {
@@ -119,7 +118,7 @@ fn score(candidate: &Mirror, problems: &[Document], clean: &[Document]) -> usize
 
     for problem in problems {
         if seq.iter_matches_in_doc(problem).count() == 1 {
-            correct += 1;
+            correct += 50;
         }
     }
 
@@ -137,7 +136,7 @@ fn score(candidate: &Mirror, problems: &[Document], clean: &[Document]) -> usize
 
 pub fn max_possible_score(problems: &[Document], clean: &[Document]) -> usize {
     const TIE_SCALE: usize = 500;
-    let per_problem = 1usize;
+    let per_problem = 50usize;
     let per_clean = 100usize;
 
     let correctness = per_problem
