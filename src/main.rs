@@ -54,15 +54,15 @@ fn main() {
 
     for _i in 0..args.generations {
         mirs.par_sort_by_cached_key(|s| {
-            let score = score(&s.to_seq_expr(), &problems, &clean);
+            let score = score(&s, &problems, &clean);
             usize::MAX - score
         });
 
-        for i in 0..4.min(mirs.len()) {
+        for i in 0..1.min(mirs.len()) {
             dbg!(
                 &mirs[i],
-                score(&mirs[i].to_seq_expr(), &problems, &clean),
-                problems.len() + clean.len()
+                score(&mirs[i], &problems, &clean),
+                max_possible_score(&problems, &clean),
             );
         }
 
@@ -91,25 +91,60 @@ fn load_documents(path: &str) -> Vec<Document> {
         .collect()
 }
 
-fn score(candidate: &SequenceExpr, problems: &[Document], clean: &[Document]) -> usize {
-    let mut correct = 0;
+// Treat correctness as the dominant term and use simplicity as a tiebreaker.
+// "Simpler" = fewer non-whitespace atoms and smaller UPOS sets.
+fn mirror_complexity(m: &Mirror) -> usize {
+    use MirrorAtom::*;
+    let mut cost = 0usize;
 
-    let mut matches = Vec::new();
+    for atom in &m.seq {
+        match atom {
+            Whitespace => {} // free
+            Word(_w) => {
+                cost += 1;
+            }
+            UPOS(set) => {
+                cost += set.len().max(1);
+            }
+        }
+    }
+
+    cost
+}
+
+fn score(candidate: &Mirror, problems: &[Document], clean: &[Document]) -> usize {
+    let seq = candidate.to_seq_expr();
+
+    let mut correct = 0usize;
 
     for problem in problems {
-        matches.clear();
-        matches.extend(candidate.iter_matches_in_doc(problem));
-
-        if matches.len() == 1 {
+        if seq.iter_matches_in_doc(problem).count() == 1 {
             correct += 1;
         }
     }
 
     for clean in clean {
-        if candidate.iter_matches_in_doc(clean).count() == 0 {
-            correct += 1;
+        if seq.iter_matches_in_doc(clean).count() == 0 {
+            correct += 100;
         }
     }
 
-    correct
+    const TIE_SCALE: usize = 1_000;
+    let simplicity_bonus = TIE_SCALE.saturating_sub(mirror_complexity(candidate).min(TIE_SCALE));
+
+    correct.saturating_mul(TIE_SCALE) + simplicity_bonus
+}
+
+pub fn max_possible_score(problems: &[Document], clean: &[Document]) -> usize {
+    const TIE_SCALE: usize = 1_000;
+    let per_problem = 1usize;
+    let per_clean = 100usize;
+
+    let correctness = per_problem
+        .saturating_mul(problems.len())
+        .saturating_add(per_clean.saturating_mul(clean.len()));
+
+    correctness
+        .saturating_mul(TIE_SCALE)
+        .saturating_add(TIE_SCALE)
 }

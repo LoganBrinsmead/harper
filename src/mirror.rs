@@ -68,7 +68,7 @@ impl Mirror {
             let step = &mut self.seq[i];
             Self::mutate_step(step, rng);
         } else {
-            let i = rng.random_range(0..self.seq.len());
+            let i = rng.random_range(0..=self.seq.len());
             self.seq.insert(i, Self::create_random_step(rng));
         }
     }
