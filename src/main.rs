@@ -8,10 +8,11 @@ use harper_core::patterns::UPOSSet;
 use harper_core::spell::{Dictionary, FstDictionary};
 use rand::seq::IndexedRandom;
 use rand::seq::SliceRandom;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use rayon::slice::ParallelSliceMut;
 use std::fs;
 
-use self::mirror::{Mirror, MirrorAtom};
+use self::mirror::{Mirror, MirrorAtom, MirrorLayer};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -48,7 +49,9 @@ fn main() {
     let clean = load_documents(&args.clean_file);
 
     let mut mirs = vec![Mirror {
-        seq: vec![MirrorAtom::Word("to".to_string())],
+        layers: vec![MirrorLayer {
+            seq: vec![MirrorAtom::Word("to".to_string())],
+        }],
     }];
 
     for _i in 0..args.generations {
@@ -78,6 +81,7 @@ fn main() {
         }
 
         mirs.append(&mut perm_mirs);
+
         mirs.shuffle(&mut rand::rng());
     }
 }
@@ -96,14 +100,16 @@ fn mirror_complexity(m: &Mirror) -> usize {
     use MirrorAtom::*;
     let mut cost = 0usize;
 
-    for atom in &m.seq {
-        match atom {
-            Whitespace => {} // free
-            Word(_w) => {
-                cost += 1;
-            }
-            UPOS(set) => {
-                cost += set.len().max(1);
+    for layer in &m.layers {
+        for atom in &layer.seq {
+            match atom {
+                Whitespace => {} // free
+                Word(_w) => {
+                    cost += 1;
+                }
+                UPOS(set) => {
+                    cost += set.len().max(1);
+                }
             }
         }
     }
@@ -112,18 +118,18 @@ fn mirror_complexity(m: &Mirror) -> usize {
 }
 
 fn score(candidate: &Mirror, problems: &[Document], clean: &[Document]) -> usize {
-    let seq = candidate.to_seq_expr();
+    let expr = candidate.to_expr();
 
     let mut correct = 0usize;
 
     for problem in problems {
-        if seq.iter_matches_in_doc(problem).count() == 1 {
+        if expr.iter_matches_in_doc(problem).count() == 1 {
             correct += 50;
         }
     }
 
     for clean in clean {
-        if seq.iter_matches_in_doc(clean).count() == 0 {
+        if expr.iter_matches_in_doc(clean).count() == 0 {
             correct += 100;
         }
     }
