@@ -41,10 +41,22 @@ struct Args {
     /// The maximum number of mutations to apply to a child
     #[arg(long, default_value_t = 5)]
     max_mutations: usize,
+
+    /// The number of jobs (threads) to use for parallel processing.
+    /// If not specified, Rayon will use the default number of threads.
+    #[arg(short, long)]
+    jobs: Option<usize>,
 }
 
 fn main() {
     let args = Args::parse();
+
+    if let Some(jobs) = args.jobs {
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(jobs)
+            .build_global()
+            .unwrap();
+    }
 
     let problems = load_documents(&args.problem_file);
     let clean = load_documents(&args.clean_file);
