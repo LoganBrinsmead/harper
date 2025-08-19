@@ -11,6 +11,7 @@ use rand::seq::SliceRandom;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use rayon::slice::ParallelSliceMut;
 use std::fs;
+use std::time::Instant;
 
 use self::mirror::{Mirror, MirrorAtom, MirrorLayer};
 
@@ -57,6 +58,8 @@ fn main() {
     let mut last_best_score = 0;
 
     for i in 0..args.generations {
+        let start_time = Instant::now();
+
         mirs.par_sort_by_cached_key(|s| {
             let score = score(&s, &problems, &clean);
             usize::MAX - score
@@ -69,13 +72,16 @@ fn main() {
         };
 
         let delta = best_score as i64 - last_best_score as i64;
+        let elapsed = start_time.elapsed();
+        let candidates_per_second = (mirs.len() as f64 / elapsed.as_secs_f64()) as usize;
 
         println!(
-            "Generation {:<4} | Best Score: {:<10} | Max Score: {:<10} | Delta: {:<+10}",
+            "Generation {:<4} | Best Score: {:<10} | Max Score: {:<10} | Delta: {:<+10} | Candidates/sec: {:<10}",
             i,
             best_score,
             max_possible_score(&problems, &clean),
-            delta
+            delta,
+            candidates_per_second
         );
 
         if let Some(best_mir) = mirs.first() {
