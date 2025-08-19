@@ -1,19 +1,14 @@
 mod mirror;
 
 use clap::Parser;
-use harper_brill::UPOS;
 use harper_core::Document;
-use harper_core::expr::{ExprExt, SequenceExpr};
-use harper_core::patterns::UPOSSet;
-use harper_core::spell::{Dictionary, FstDictionary};
-use rand::seq::IndexedRandom;
+use harper_core::expr::ExprExt;
 use rand::seq::SliceRandom;
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use rayon::slice::ParallelSliceMut;
 use std::fs;
 use std::time::Instant;
 
-use self::mirror::{Mirror, MirrorAtom, MirrorLayer};
+use self::mirror::{Mirror, MirrorAtom, MirrorLayer, MirrorNode};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -62,9 +57,9 @@ fn main() {
     let clean = load_documents(&args.clean_file);
 
     let mut mirs = vec![Mirror {
-        layers: vec![MirrorLayer {
-            seq: vec![MirrorAtom::Word("to".to_string())],
-        }],
+        root: MirrorNode::Leaf(MirrorLayer {
+            seq: vec![MirrorAtom::Word("to".to_owned())],
+        }),
     }];
 
     let mut last_best_score = 0;
@@ -103,6 +98,10 @@ fn main() {
         let elapsed = start_time.elapsed();
         let candidates_per_second = (mirs.len() as f64 / elapsed.as_secs_f64()) as usize;
 
+        if let Some(best_mir) = mirs.first() {
+            println!("Best mirror: {:#?}", best_mir);
+        }
+
         println!(
             "Generation {:<4} | Best Score: {:<10} | Max Score: {:<10} | Delta: {:<+10} | Candidates/sec: {:<10}",
             i,
@@ -111,10 +110,6 @@ fn main() {
             delta,
             candidates_per_second
         );
-
-        if let Some(best_mir) = mirs.first() {
-            println!("Best mirror: {:#?}", best_mir);
-        }
 
         last_best_score = best_score;
     }
@@ -131,24 +126,34 @@ fn load_documents(path: &str) -> Vec<Document> {
 // Treat correctness as the dominant term and use simplicity as a tiebreaker.
 // "Simpler" = fewer non-whitespace atoms and smaller UPOS sets.
 fn mirror_complexity(m: &Mirror) -> usize {
-    use MirrorAtom::*;
-    let mut cost = 0usize;
-
-    for layer in &m.layers {
+    fn layer_cost(layer: &MirrorLayer) -> usize {
+        let mut cost = 0usize;
         for atom in &layer.seq {
             match atom {
-                Whitespace => {} // free
-                Word(_w) => {
+                MirrorAtom::Whitespace => {
                     cost += 1;
                 }
-                UPOS(set) => {
+                MirrorAtom::Word(_) => {
+                    cost += 1;
+                }
+                MirrorAtom::UPOS(set) => {
                     cost += set.len().max(1);
                 }
             }
         }
+        cost
     }
 
-    cost
+    fn node_cost(node: &MirrorNode) -> usize {
+        match node {
+            MirrorNode::Leaf(layer) => layer_cost(layer),
+            MirrorNode::And(children) | MirrorNode::Or(children) => {
+                children.iter().map(node_cost).sum::<usize>() + 2
+            }
+        }
+    }
+
+    node_cost(&m.root)
 }
 
 fn score(candidate: &Mirror, problems: &[Document], clean: &[Document]) -> usize {
@@ -168,14 +173,14 @@ fn score(candidate: &Mirror, problems: &[Document], clean: &[Document]) -> usize
         }
     }
 
-    const TIE_SCALE: usize = 25;
+    const TIE_SCALE: usize = 40;
     let simplicity_bonus = TIE_SCALE.saturating_sub(mirror_complexity(candidate).min(TIE_SCALE));
 
     correct.saturating_mul(TIE_SCALE) + simplicity_bonus
 }
 
 pub fn max_possible_score(problems: &[Document], clean: &[Document]) -> usize {
-    const TIE_SCALE: usize = 25;
+    const TIE_SCALE: usize = 40;
     let per_problem = 50usize;
     let per_clean = 100usize;
 

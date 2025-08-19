@@ -1,5 +1,5 @@
 use harper_brill::UPOS;
-use harper_core::expr::{All, LongestMatchOf, SequenceExpr};
+use harper_core::expr::{All, Expr, LongestMatchOf, SequenceExpr};
 use harper_core::patterns::{UPOSSet, WordSet};
 use rand::seq::{IndexedRandom, SliceRandom};
 use rand::{Rng, random_bool};
@@ -7,9 +7,35 @@ use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 use strum::IntoEnumIterator;
 
+/// A tree of expressions.
+/// - `And`: every child must match (logical AND).
+/// - `Or`: at least one child must match (logical OR, longest-match semantics).
+/// - `Leaf`: a concrete `SequenceExpr` built from a `MirrorLayer`.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum MirrorNode {
+    And(Vec<MirrorNode>),
+    Or(Vec<MirrorNode>),
+    Leaf(MirrorLayer),
+}
+
+impl Default for MirrorNode {
+    fn default() -> Self {
+        Self::Leaf(MirrorLayer { seq: vec![] })
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Mirror {
-    pub layers: Vec<MirrorLayer>,
+    pub root: MirrorNode,
+}
+
+/// Back-compat constructor for callers that still think in “layers = AND of sequences”.
+impl From<Vec<MirrorLayer>> for Mirror {
+    fn from(layers: Vec<MirrorLayer>) -> Self {
+        Mirror {
+            root: MirrorNode::And(layers.into_iter().map(MirrorNode::Leaf).collect()),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -92,7 +118,7 @@ impl MirrorLayer {
         }
     }
 
-    fn create_random_layer(rng: &mut impl Rng) -> Self {
+    pub fn create_random_layer(rng: &mut impl Rng) -> Self {
         let len = rng.random_range(1..=3);
         let mut seq = Vec::with_capacity(len);
         for _ in 0..len {
@@ -102,13 +128,113 @@ impl MirrorLayer {
     }
 }
 
-impl Mirror {
-    pub fn to_expr(&self) -> All {
-        let mut all = All::default();
-        for layer in &self.layers {
-            all.add(layer.to_seq_expr());
+impl MirrorNode {
+    /// Build a boxed `Expr` for this subtree.
+    /// AND => `All`, OR => `LongestMatchOf`, Leaf => `SequenceExpr`.
+    pub fn to_owned_expr(&self) -> Box<dyn Expr> {
+        match self {
+            MirrorNode::Leaf(layer) => Box::new(layer.to_seq_expr()),
+            MirrorNode::And(children) => {
+                let mut v: Vec<Box<dyn Expr>> = Vec::with_capacity(children.len().max(1));
+                for c in children {
+                    v.push(c.to_owned_expr());
+                }
+                Box::new(All::new(v))
+            }
+            MirrorNode::Or(children) => {
+                let mut v: Vec<Box<dyn Expr>> = Vec::with_capacity(children.len().max(1));
+                for c in children {
+                    v.push(c.to_owned_expr());
+                }
+                Box::new(LongestMatchOf::new(v))
+            }
         }
-        all
+    }
+
+    /// Randomly mutate the tree:
+    /// - Recurse into a child and mutate it
+    /// - Insert/remove a child
+    /// - Flip AND <-> OR
+    /// - Wrap/unwrap a leaf to introduce structure
+    pub fn mutate(&mut self, rng: &mut impl Rng) {
+        match self {
+            MirrorNode::Leaf(layer) => {
+                // 70%: tweak the leaf; 30%: promote to a tiny AND/OR subtree
+                if rng.random_bool(0.7) {
+                    layer.mutate(rng);
+                } else {
+                    let new_leaf = MirrorNode::Leaf(MirrorLayer::create_random_layer(rng));
+                    if rng.random_bool(0.5) {
+                        *self = MirrorNode::And(vec![MirrorNode::Leaf(layer.clone()), new_leaf]);
+                    } else {
+                        *self = MirrorNode::Or(vec![MirrorNode::Leaf(layer.clone()), new_leaf]);
+                    }
+                }
+            }
+            MirrorNode::And(children) | MirrorNode::Or(children) => {
+                let len = children.len();
+
+                // Occasionally flip operator
+                if rng.random_bool(0.1) {
+                    let swapped = match std::mem::take(self) {
+                        MirrorNode::And(c) => MirrorNode::Or(c),
+                        MirrorNode::Or(c) => MirrorNode::And(c),
+                        MirrorNode::Leaf(_) => unreachable!(),
+                    };
+                    *self = swapped;
+                    return;
+                }
+
+                // Sometimes reorder for variety
+                if len >= 2 && rng.random_bool(0.1) {
+                    children.shuffle(rng);
+                }
+
+                // Insert / remove
+                if rng.random_bool(0.25) {
+                    let idx = rng.random_range(0..=len);
+                    children.insert(idx, MirrorNode::Leaf(MirrorLayer::create_random_layer(rng)));
+                } else if len > 1 && rng.random_bool(0.15) {
+                    let idx = rng.random_range(0..len);
+                    children.remove(idx);
+                } else if !children.is_empty() {
+                    // Recurse into a child
+                    let idx = rng.random_range(0..children.len());
+                    children[idx].mutate(rng);
+                }
+
+                // Occasionally collapse a singleton (unwrap) or wrap a pair
+                if children.len() == 1 && rng.random_bool(0.15) {
+                    // Replace this node with its only child
+                    let only = children.remove(0);
+                    *self = only;
+                } else if children.len() >= 2 && rng.random_bool(0.15) {
+                    // Wrap two adjacent children into a new AND/OR group
+                    let idx = rng.random_range(0..children.len() - 1);
+                    let a = children.remove(idx);
+                    let b = children.remove(idx); // same idx: list shrank
+                    let wrapped = if rng.random_bool(0.5) {
+                        MirrorNode::And(vec![a, b])
+                    } else {
+                        MirrorNode::Or(vec![a, b])
+                    };
+                    children.insert(idx, wrapped);
+                }
+            }
+        }
+    }
+}
+
+impl Mirror {
+    /// Legacy API: keep returning an `All`, but place the whole tree as a single child.
+    /// This preserves older call sites that expect `All` while allowing OR inside.
+    pub fn to_expr(&self) -> All {
+        All::new(vec![self.root.to_owned_expr()])
+    }
+
+    /// New API: get the actual tree as a single `Expr`.
+    pub fn to_owned_expr(&self) -> Box<dyn Expr> {
+        self.root.to_owned_expr()
     }
 
     pub fn create_children_with_mutations(
@@ -130,38 +256,27 @@ impl Mirror {
     }
 
     pub fn mutate(&mut self, rng: &mut impl Rng) {
-        if self.layers.is_empty() || rng.random_bool(0.2) {
-            let i = rng.random_range(0..=self.layers.len());
-            self.layers.insert(i, MirrorLayer::create_random_layer(rng));
+        // 20%: wrap root to add a new level (AND/OR); 10%: replace root with a fresh leaf; otherwise recurse.
+        if rng.random_bool(0.2) {
+            let wrapper_is_and = rng.random_bool(0.5);
+            let sibling = MirrorNode::Leaf(MirrorLayer::create_random_layer(rng));
+            let old = std::mem::replace(
+                &mut self.root,
+                MirrorNode::Leaf(MirrorLayer::create_random_layer(rng)),
+            );
+            self.root = if wrapper_is_and {
+                MirrorNode::And(vec![old, sibling])
+            } else {
+                MirrorNode::Or(vec![old, sibling])
+            };
             return;
         }
 
-        if rng.random_bool(0.1) && !self.layers.is_empty() {
-            let i = rng.random_range(0..self.layers.len());
-            self.layers.remove(i);
+        if rng.random_bool(0.1) {
+            self.root = MirrorNode::Leaf(MirrorLayer::create_random_layer(rng));
             return;
         }
 
-        if rng.random_bool(0.1) && self.layers.len() >= 2 {
-            self.layers.shuffle(rng);
-            return;
-        }
-
-        let i = rng.random_range(0..self.layers.len());
-        let layer = &mut self.layers[i];
-
-        if rng.random_bool(0.6) {
-            layer.mutate(rng);
-        } else {
-            if rng.random_bool(0.5) {
-                let insert_at = rng.random_range(0..=layer.seq.len());
-                layer
-                    .seq
-                    .insert(insert_at, MirrorLayer::create_random_step(rng));
-            } else if !layer.seq.is_empty() {
-                let remove_at = rng.random_range(0..layer.seq.len());
-                layer.seq.remove(remove_at);
-            }
-        }
+        self.root.mutate(rng);
     }
 }
