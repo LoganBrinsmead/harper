@@ -72,6 +72,22 @@ fn main() {
     for i in 0..args.generations {
         let start_time = Instant::now();
 
+        mirs.truncate(args.min_pop);
+
+        let mut perm_mirs = Vec::new();
+
+        for mir in &mirs {
+            perm_mirs.append(&mut mir.create_children_with_mutations(
+                args.child_ratio,
+                args.max_mutations,
+                &mut rand::thread_rng(),
+            ));
+        }
+
+        mirs.append(&mut perm_mirs);
+
+        mirs.shuffle(&mut rand::thread_rng());
+
         mirs.par_sort_by_cached_key(|s| {
             let score = score(&s, &problems, &clean);
             usize::MAX - score
@@ -101,22 +117,6 @@ fn main() {
         }
 
         last_best_score = best_score;
-
-        mirs.truncate(args.min_pop);
-
-        let mut perm_mirs = Vec::new();
-
-        for mir in &mirs {
-            perm_mirs.append(&mut mir.create_children_with_mutations(
-                args.child_ratio,
-                args.max_mutations,
-                &mut rand::thread_rng(),
-            ));
-        }
-
-        mirs.append(&mut perm_mirs);
-
-        mirs.shuffle(&mut rand::thread_rng());
     }
 }
 
