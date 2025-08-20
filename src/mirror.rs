@@ -226,14 +226,7 @@ impl MirrorNode {
 }
 
 impl Mirror {
-    /// Legacy API: keep returning an `All`, but place the whole tree as a single child.
-    /// This preserves older call sites that expect `All` while allowing OR inside.
-    pub fn to_expr(&self) -> All {
-        All::new(vec![self.root.to_owned_expr()])
-    }
-
-    /// New API: get the actual tree as a single `Expr`.
-    pub fn to_owned_expr(&self) -> Box<dyn Expr> {
+    pub fn to_expr(&self) -> Box<dyn Expr> {
         self.root.to_owned_expr()
     }
 
