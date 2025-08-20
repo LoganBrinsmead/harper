@@ -156,6 +156,10 @@ fn mirror_complexity(m: &Mirror) -> usize {
     node_cost(&m.root)
 }
 
+const TIE_SCALE: usize = 400;
+const PROBLEM_REWARD: usize = 500;
+const CLEAN_REWARD: usize = 1000;
+
 fn score(candidate: &Mirror, problems: &[Document], clean: &[Document]) -> usize {
     let expr = candidate.to_expr();
 
@@ -163,30 +167,25 @@ fn score(candidate: &Mirror, problems: &[Document], clean: &[Document]) -> usize
 
     for problem in problems {
         if expr.iter_matches_in_doc(problem).count() == 1 {
-            correct += 50;
+            correct += PROBLEM_REWARD;
         }
     }
 
     for clean in clean {
         if expr.iter_matches_in_doc(clean).count() == 0 {
-            correct += 100;
+            correct += CLEAN_REWARD;
         }
     }
 
-    const TIE_SCALE: usize = 40;
     let simplicity_bonus = TIE_SCALE.saturating_sub(mirror_complexity(candidate).min(TIE_SCALE));
 
     correct.saturating_mul(TIE_SCALE) + simplicity_bonus
 }
 
 pub fn max_possible_score(problems: &[Document], clean: &[Document]) -> usize {
-    const TIE_SCALE: usize = 40;
-    let per_problem = 50usize;
-    let per_clean = 100usize;
-
-    let correctness = per_problem
+    let correctness = PROBLEM_REWARD
         .saturating_mul(problems.len())
-        .saturating_add(per_clean.saturating_mul(clean.len()));
+        .saturating_add(CLEAN_REWARD.saturating_mul(clean.len()));
 
     correctness
         .saturating_mul(TIE_SCALE)
