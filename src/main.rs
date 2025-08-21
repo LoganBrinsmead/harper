@@ -4,6 +4,7 @@ use clap::Parser;
 use harper_core::Document;
 use harper_core::expr::ExprExt;
 use rand::seq::SliceRandom;
+use rayon::iter::ParallelIterator;
 use rayon::slice::ParallelSliceMut;
 use std::fs;
 use std::time::Instant;
@@ -70,18 +71,19 @@ fn main() {
         mirs.truncate(args.min_pop);
 
         let mut perm_mirs = Vec::new();
+        let mut rng = rand::rng();
 
         for mir in &mirs {
             perm_mirs.append(&mut mir.create_children_with_mutations(
                 args.child_ratio,
                 args.max_mutations,
-                &mut rand::thread_rng(),
+                &mut rng,
             ));
         }
 
         mirs.append(&mut perm_mirs);
 
-        mirs.shuffle(&mut rand::thread_rng());
+        mirs.shuffle(&mut rand::rng());
 
         mirs.par_sort_by_cached_key(|s| {
             let score = score(&s, &problems, &clean);
@@ -119,7 +121,7 @@ fn load_documents(path: &str) -> Vec<Document> {
     fs::read_to_string(path)
         .expect("Unable to read file.")
         .lines()
-        .map(|s| Document::new_plain_english_curated(s))
+        .map(Document::new_plain_english_curated)
         .collect()
 }
 
@@ -165,14 +167,19 @@ fn score(candidate: &Mirror, problems: &[Document], clean: &[Document]) -> usize
 
     let mut correct = 0usize;
 
+    // Early-exit counting: avoid scanning entire document when not necessary.
     for problem in problems {
-        if expr.iter_matches_in_doc(problem).count() == 1 {
+        let mut it = expr.iter_matches_in_doc(problem);
+        let first = it.next().is_some();
+        let second = it.next().is_none();
+        if first && second {
+            // Exactly one match
             correct += PROBLEM_REWARD;
         }
     }
 
     for clean in clean {
-        if expr.iter_matches_in_doc(clean).count() == 0 {
+        if expr.iter_matches_in_doc(clean).next().is_none() {
             correct += CLEAN_REWARD;
         }
     }

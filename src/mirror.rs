@@ -1,7 +1,7 @@
 use harper_brill::UPOS;
 use harper_core::expr::{All, Expr, LongestMatchOf, SequenceExpr};
 use harper_core::patterns::{UPOSSet, WordSet};
-use rand::seq::{IndexedRandom, SliceRandom};
+use rand::seq::SliceRandom;
 use rand::{Rng, random_bool};
 use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
@@ -55,7 +55,7 @@ impl MirrorLayer {
         let mut seq = SequenceExpr::default();
         for atom in &self.seq {
             match atom {
-                MirrorAtom::UPOS(uposset) => seq = seq.then(UPOSSet::new(&uposset)),
+                MirrorAtom::UPOS(uposset) => seq = seq.then(UPOSSet::new(uposset)),
                 MirrorAtom::Whitespace => seq = seq.t_ws(),
                 MirrorAtom::Word(word) => {
                     let mut set = WordSet::default();
@@ -239,7 +239,7 @@ impl Mirror {
         let mut children = Vec::with_capacity(child_count);
         for _ in 0..child_count {
             let mut child = self.clone();
-            let mutation_count = rng.gen_range(1..=max_mutations);
+            let mutation_count = rng.random_range(1..=max_mutations);
             for _ in 0..mutation_count {
                 child.mutate(rng);
             }
