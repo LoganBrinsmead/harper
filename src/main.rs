@@ -141,6 +141,10 @@ fn mirror_complexity(m: &Mirror) -> usize {
                 MirrorAtom::UPOS(set) => {
                     cost += set.len().max(1);
                 }
+                MirrorAtom::NPMember => {
+                    // Simple boolean check; treat similar to a basic atom
+                    cost += 1;
+                }
             }
         }
         cost

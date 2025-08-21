@@ -1,4 +1,5 @@
 use harper_brill::UPOS;
+use harper_core::TokenKind;
 use harper_core::expr::{All, Expr, LongestMatchOf, SequenceExpr};
 use harper_core::patterns::{UPOSSet, WordSet};
 use rand::seq::SliceRandom;
@@ -48,6 +49,9 @@ pub enum MirrorAtom {
     Word(String),
     UPOS(SmallVec<[UPOS; 16]>),
     Whitespace,
+    /// Match if the current token is marked as a member of a noun phrase
+    /// via `WordMetadata::np_member == Some(true)`.
+    NPMember,
 }
 
 impl MirrorLayer {
@@ -61,6 +65,14 @@ impl MirrorLayer {
                     let mut set = WordSet::default();
                     set.add_chars(&word.chars().collect::<Vec<_>>());
                     seq = seq.then(set)
+                }
+                MirrorAtom::NPMember => {
+                    seq = seq.then(
+                        |tok: &harper_core::Token, _source: &[char]| match &tok.kind {
+                            TokenKind::Word(Some(md)) => md.np_member == Some(true),
+                            _ => false,
+                        },
+                    );
                 }
             }
         }
@@ -102,6 +114,7 @@ impl MirrorLayer {
                 }
             }
             MirrorAtom::Whitespace => {}
+            MirrorAtom::NPMember => {}
         }
     }
 
@@ -113,6 +126,8 @@ impl MirrorLayer {
             MirrorAtom::UPOS(all_upos)
         } else if random_bool(0.2) {
             MirrorAtom::Word(String::from("the"))
+        } else if random_bool(0.1) {
+            MirrorAtom::NPMember
         } else {
             MirrorAtom::Whitespace
         }
