@@ -4,7 +4,6 @@ use clap::Parser;
 use harper_core::Document;
 use harper_core::expr::ExprExt;
 use rand::seq::SliceRandom;
-use rayon::iter::ParallelIterator;
 use rayon::slice::ParallelSliceMut;
 use std::fs;
 use std::time::Instant;
@@ -42,6 +41,10 @@ struct Args {
     /// If not specified, Rayon will use the default number of threads.
     #[arg(short, long)]
     jobs: Option<usize>,
+
+    /// Optional seed word to initialize the search with
+    #[arg(long)]
+    seed: Option<String>,
 }
 
 fn main() {
@@ -57,10 +60,17 @@ fn main() {
     let problems = load_documents(&args.problem_file);
     let clean = load_documents(&args.clean_file);
 
-    let mut mirs = vec![Mirror {
-        root: MirrorNode::Leaf(MirrorLayer {
-            seq: vec![MirrorAtom::Word("to".to_owned())],
-        }),
+    let mut mirs = vec![if let Some(seed) = args.seed.clone() {
+        Mirror {
+            root: MirrorNode::Leaf(MirrorLayer {
+                seq: vec![MirrorAtom::Word(seed)],
+            }),
+        }
+    } else {
+        // No seed provided: start with an empty leaf and let mutation explore
+        Mirror {
+            root: MirrorNode::Leaf(MirrorLayer { seq: vec![] }),
+        }
     }];
 
     let mut last_best_score = 0;
@@ -86,7 +96,7 @@ fn main() {
         mirs.shuffle(&mut rand::rng());
 
         mirs.par_sort_by_cached_key(|s| {
-            let score = score(&s, &problems, &clean);
+            let score = score(s, &problems, &clean);
             usize::MAX - score
         });
 
@@ -125,7 +135,7 @@ fn load_documents(path: &str) -> Vec<Document> {
         .collect()
 }
 
-// Treat correctness as the dominant term and use simplicity as a tiebreaker.
+// Treat correctness as the dominant term and use simplicity as a small bonus.
 // "Simpler" = fewer non-whitespace atoms and smaller UPOS sets.
 fn mirror_complexity(m: &Mirror) -> usize {
     fn layer_cost(layer: &MirrorLayer) -> usize {
@@ -139,7 +149,7 @@ fn mirror_complexity(m: &Mirror) -> usize {
                     cost += 1;
                 }
                 MirrorAtom::UPOS(set) => {
-                    cost += set.len().max(1);
+                    cost += set.len();
                 }
                 MirrorAtom::NPMember => {
                     // Simple boolean check; treat similar to a basic atom
@@ -162,43 +172,62 @@ fn mirror_complexity(m: &Mirror) -> usize {
     node_cost(&m.root)
 }
 
-const TIE_SCALE: usize = 400;
-const PROBLEM_REWARD: usize = 500;
-const CLEAN_REWARD: usize = 1000;
+// Upper bound for simplicity bonus points. This should be small relative
+// to correctness so it cannot outweigh getting sentences right.
+const SIMPLICITY_BONUS_MAX: usize = 150;
 
 fn score(candidate: &Mirror, problems: &[Document], clean: &[Document]) -> usize {
     let expr = candidate.to_expr();
 
-    let mut correct = 0usize;
+    // Clean correctness: percentage of clean sentences with zero matches.
+    let mut clean_correct = 0usize;
+    for c in clean {
+        if expr.iter_matches_in_doc(c).next().is_none() {
+            clean_correct += 1;
+        }
+    }
+    let clean_pct = if clean.is_empty() {
+        0usize
+    } else {
+        (clean_correct * 100) / clean.len()
+    };
 
-    // Early-exit counting: avoid scanning entire document when not necessary.
-    for problem in problems {
-        let mut it = expr.iter_matches_in_doc(problem);
+    // Problem correctness: percentage of problem sentences that are flagged.
+    // Preserve the existing notion of a "correct" flag as exactly one match.
+    let mut problem_correct = 0usize;
+    for p in problems {
+        let mut it = expr.iter_matches_in_doc(p);
         let first = it.next().is_some();
         let second = it.next().is_none();
         if first && second {
-            // Exactly one match
-            correct += PROBLEM_REWARD;
+            problem_correct += 1;
         }
     }
+    let problem_pct = if problems.is_empty() {
+        0usize
+    } else {
+        (problem_correct * 100) / problems.len()
+    };
 
-    for clean in clean {
-        if expr.iter_matches_in_doc(clean).next().is_none() {
-            correct += CLEAN_REWARD;
-        }
-    }
+    // Combined correctness: clean is weighted 2x as requested.
+    let correctness_score = clean_pct * 2 + problem_pct;
 
-    let simplicity_bonus = TIE_SCALE.saturating_sub(mirror_complexity(candidate).min(TIE_SCALE));
+    // Small simplicity bonus in 0..=SIMPLICITY_BONUS_MAX, decreasing with complexity.
+    let complexity = mirror_complexity(candidate);
+    let simplicity_bonus = SIMPLICITY_BONUS_MAX.saturating_sub(complexity);
 
-    correct.saturating_mul(TIE_SCALE) + simplicity_bonus
+    correctness_score * 100 + simplicity_bonus
 }
 
 pub fn max_possible_score(problems: &[Document], clean: &[Document]) -> usize {
-    let correctness = PROBLEM_REWARD
-        .saturating_mul(problems.len())
-        .saturating_add(CLEAN_REWARD.saturating_mul(clean.len()));
-
-    correctness
-        .saturating_mul(TIE_SCALE)
-        .saturating_add(TIE_SCALE)
+    // Max correctness = (2x clean%) + (1x problem%).
+    // Only count a component if its corpus is present.
+    let mut max = 0usize;
+    if !clean.is_empty() {
+        max += 200; // 2 * 100%
+    }
+    if !problems.is_empty() {
+        max += 100; // 1 * 100%
+    }
+    max * 100 + SIMPLICITY_BONUS_MAX
 }
