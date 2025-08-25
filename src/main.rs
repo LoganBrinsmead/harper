@@ -45,6 +45,10 @@ struct Args {
     /// Optional seed word to initialize the search with
     #[arg(long)]
     seed: Option<String>,
+
+    /// Output file to write the best candidate after all generations
+    #[arg(short = 'o', long = "output")]
+    output: Option<String>,
 }
 
 fn main() {
@@ -124,6 +128,17 @@ fn main() {
         );
 
         last_best_score = best_score;
+    }
+
+    // After all generations, optionally save the best candidate to a file in a textual format
+    if let Some(path) = args.output.as_deref() {
+        if let Some(best_mir) = mirs.first() {
+            if let Err(e) = fs::write(path, format!("{:#?}", best_mir)) {
+                eprintln!("Failed to save best candidate to {}: {}", path, e);
+            } else {
+                println!("Saved best candidate to {}", path);
+            }
+        }
     }
 }
 
