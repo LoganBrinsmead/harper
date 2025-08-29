@@ -81,3 +81,64 @@ The student missed the bus to school.
 The baby cried until the mother came.  
 The letter arrived without a stamp.  
 The bread burned in the oven.  
+I can’t figure out how to fix this.
+She asked how to get home before dusk.
+Please show me how to configure the router.
+Explain how to enable verbose logging in production.
+Do you remember how to calculate compound interest?
+We must decide how to allocate scarce bandwidth.
+He demonstrated how to bake sourdough with a stiff levain.
+Clarify how to deploy the service on Kubernetes.
+Remind me how to change my billing address in the portal.
+The brief outlines how to submit a compliant proposal.
+The nurse explained how to taper the dosage safely.
+Tell me how to pronounce “schadenfreude”.
+Here’s how to replicate the experiment precisely.
+Outline how to escalate a Sev1 incident.
+The mentor taught her how to write idempotent handlers.
+Let’s review how to troubleshoot kernel panics.
+The SOP describes how to sanitize the fermenter.
+Can you recall how to resolve a merge conflict in Git?
+Please demonstrate how to calibrate the torque wrench.
+The guide illustrates how to harden the container image.
+We’re uncertain how to remediate the CVE quickly.
+He forgot how to conjugate the verb under stress.
+Map out how to integrate this OAuth flow.
+Practice how to deliver the keynote without slides.
+She’s unsure how to proceed given the constraints.
+The meeting ran long, and the clients grew impatient.
+I called the restaurant, but nobody answered the phone.
+You can finish the slide deck, or you can push the deadline.
+He wanted to go hiking, yet the forecast promised heavy rain.
+We missed the exit, so we had to circle back.
+She studied all night, for she feared the exam would be brutal.
+The device keeps overheating, and the battery drains within minutes.
+I washed the car, but the dust storm returned by noon.
+They opened a second store, so the weekend shift needs more staff.
+The software compiled successfully, yet the app crashed on launch.
+He promised to call, or he will send a text instead.
+We upgraded the servers, for the traffic spikes were overwhelming.
+She finished the chapter, and she closed the book with relief.
+The cat darted under the couch, so the dog lost interest.
+I could join the early flight, or I could take the train tomorrow.
+Our neighbors moved out, yet the street stays noisy every night.
+He filed the report on time, but the figures were still wrong.
+The lamp flickered, and the room went dark.
+The door was unlocked, so anyone could have walked in.
+They offered a refund, for the package arrived a week late.
+The keynote started late, and the livestream crashed immediately.
+I reviewed your pull request, but the failing tests still block the merge.
+The sourdough rose overnight, yet the crust stayed disappointingly pale.
+She booked the venue, so we finalized the invitations.
+The forecast promised sun, yet hail hammered the valley by noon.
+He saved the draft, or he risked losing an hour of work.
+The server rebooted, and every session expired at once.
+The rug looked antique, but the dye bled under a damp cloth.
+I can lead the meeting, or you can take point this time.
+We missed the turn, for the signage was hidden behind ivy.
+The editor flagged a cliché, so I rewrote the paragraph.
+The engine sputtered, and the dashboard lit up like a runway.
+She set three alarms, yet she overslept again.
+The gallery extended hours, so attendance increased by twenty percent.
+He didn’t read the brief, nor did he consult the timeline.
+The chef plated beautifully, but the sauce overwhelmed the fish.
