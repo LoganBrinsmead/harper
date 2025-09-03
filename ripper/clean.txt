@@ -1,0 +1,144 @@
+I ate way too much pizza last night.
+She runs too fast for me to catch up.
+This shirt is too big for me.
+He was too tired to continue.
+The movie was too long and boring.
+It’s too hot outside to go for a walk.
+They were talking too loudly in the library.
+This problem is too complicated for beginners.
+She’s too busy to answer her phone.
+The bag is too heavy for me to lift.
+I want to go shopping, but it's too late now.
+She was too tired to finish her homework.
+The soup is too hot to eat right now.
+You're standing too close to the fire.
+He runs too fast for me to keep up.
+That joke was too funny to ignore.
+The music is too loud in this room.
+She was dressed too nicely for the occasion.
+It's too bad you missed the concert.
+He’s too young to drive a car.
+The bag is too heavy for me to carry.
+You’re talking too much during the movie.
+It’s too cold outside for a picnic.
+He was driving too quickly down the street.
+She’s too busy to answer the phone right now.
+The cake is too sweet for my taste.
+I ate too many cookies after dinner.
+That shirt is too small for you.
+You’re being too hard on yourself.
+The movie was too long and boring.
+I am too hungry.
+The coffee is too hot to drink.
+The music was too loud, making it hard to hear.
+He's too shy to speak in public.
+The cake is too sweet for my taste.
+It's too expensive for me to buy right now.
+She worked too hard and ended up getting sick.
+The instructions were too complicated to understand.
+I like apples, and my brother does too.
+She's coming to the party, and he is too.
+I want to go to the beach, and you do too?
+He's a talented musician, and a great friend too.
+The movie was good, and the popcorn was delicious too.
+The problem is too difficult, and the deadline is too close.
+He's too good at the game, and he's too nice to win.
+Just be prepared to occasionally troubleshoot the debugger itself.
+You're 7 years too late
+The project scope is too ambitious
+He goes too far with bets.
+Its speed, flexibility, and seamless integration with FZF make it a compelling alternative to traditional fuzzy finding solutions.
+It's not too easy, is it?
+Soundscapes are not merely environmental features; they are integral to human identity and cultural expression.
+Its speed, flexibility, and seamless integration with FZF make it a compelling alternative to traditional fuzzy finding solutions.
+The cat jumped onto the couch and fell asleep.  
+I bought a new book yesterday.  
+The teacher asked the class to hand in the homework.  
+The sun was shining brightly over the city.  
+We went to the park after dinner.  
+She poured a glass of water for me.  
+The car stopped suddenly in the middle of the road.  
+The dog barked at a stranger outside.  
+I forgot the password again.  
+They traveled across the ocean in a small boat.  
+The bird flew out of the cage when the door opened.  
+The man standing at the corner looked suspicious.  
+The child dropped the toy on the floor.  
+The rain started falling just as the game began.  
+The house smelled like fresh paint.  
+The train arrived at the station late.  
+The friends gathered around the fire to keep warm.  
+The book sat untouched on the shelf for years.  
+The wind rattled the window all night long.  
+The doctor prescribed medicine for the cough.  
+The girl wore a red dress to the party.  
+The worker left the tools on the table.  
+The phone rang loudly during the meeting.  
+The snow covered the mountains by morning.  
+The river overflowed after the storm.  
+The artist displayed a painting in the gallery.  
+The student missed the bus to school.  
+The baby cried until the mother came.  
+The letter arrived without a stamp.  
+The bread burned in the oven.  
+I can’t figure out how to fix this.
+She asked how to get home before dusk.
+Please show me how to configure the router.
+Explain how to enable verbose logging in production.
+Do you remember how to calculate compound interest?
+We must decide how to allocate scarce bandwidth.
+He demonstrated how to bake sourdough with a stiff levain.
+Clarify how to deploy the service on Kubernetes.
+Remind me how to change my billing address in the portal.
+The brief outlines how to submit a compliant proposal.
+The nurse explained how to taper the dosage safely.
+Tell me how to pronounce “schadenfreude”.
+Here’s how to replicate the experiment precisely.
+Outline how to escalate a Sev1 incident.
+The mentor taught her how to write idempotent handlers.
+Let’s review how to troubleshoot kernel panics.
+The SOP describes how to sanitize the fermenter.
+Can you recall how to resolve a merge conflict in Git?
+Please demonstrate how to calibrate the torque wrench.
+The guide illustrates how to harden the container image.
+We’re uncertain how to remediate the CVE quickly.
+He forgot how to conjugate the verb under stress.
+Map out how to integrate this OAuth flow.
+Practice how to deliver the keynote without slides.
+She’s unsure how to proceed given the constraints.
+The meeting ran long, and the clients grew impatient.
+I called the restaurant, but nobody answered the phone.
+You can finish the slide deck, or you can push the deadline.
+He wanted to go hiking, yet the forecast promised heavy rain.
+We missed the exit, so we had to circle back.
+She studied all night, for she feared the exam would be brutal.
+The device keeps overheating, and the battery drains within minutes.
+I washed the car, but the dust storm returned by noon.
+They opened a second store, so the weekend shift needs more staff.
+The software compiled successfully, yet the app crashed on launch.
+He promised to call, or he will send a text instead.
+We upgraded the servers, for the traffic spikes were overwhelming.
+She finished the chapter, and she closed the book with relief.
+The cat darted under the couch, so the dog lost interest.
+I could join the early flight, or I could take the train tomorrow.
+Our neighbors moved out, yet the street stays noisy every night.
+He filed the report on time, but the figures were still wrong.
+The lamp flickered, and the room went dark.
+The door was unlocked, so anyone could have walked in.
+They offered a refund, for the package arrived a week late.
+The keynote started late, and the livestream crashed immediately.
+I reviewed your pull request, but the failing tests still block the merge.
+The sourdough rose overnight, yet the crust stayed disappointingly pale.
+She booked the venue, so we finalized the invitations.
+The forecast promised sun, yet hail hammered the valley by noon.
+He saved the draft, or he risked losing an hour of work.
+The server rebooted, and every session expired at once.
+The rug looked antique, but the dye bled under a damp cloth.
+I can lead the meeting, or you can take point this time.
+We missed the turn, for the signage was hidden behind ivy.
+The editor flagged a cliché, so I rewrote the paragraph.
+The engine sputtered, and the dashboard lit up like a runway.
+She set three alarms, yet she overslept again.
+The gallery extended hours, so attendance increased by twenty percent.
+He didn’t read the brief, nor did he consult the timeline.
+The chef plated beautifully, but the sauce overwhelmed the fish.
