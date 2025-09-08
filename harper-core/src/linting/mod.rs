@@ -3,6 +3,7 @@
 //! See the [`Linter`] trait and the [documentation for authoring a rule](https://writewithharper.com/docs/contributors/author-a-rule) for more information.
 
 mod a_part;
+mod addicting;
 mod adjective_double_degree;
 mod adjective_of_a;
 mod am_in_the_morning;
@@ -106,6 +107,7 @@ mod pronoun_knew;
 mod proper_noun_capitalization_linters;
 mod punctuation_clusters;
 mod quantifier_needs_of;
+mod quite_quiet;
 mod redundant_additive_adverbs;
 mod regionalisms;
 mod repeated_words;
@@ -130,6 +132,7 @@ mod thing_think;
 mod throw_rubbish;
 mod touristic;
 mod unclosed_quotes;
+mod update_place_names;
 mod use_genitive;
 mod very_unique;
 mod was_aloud;
@@ -138,8 +141,10 @@ mod whereas;
 mod widely_accepted;
 mod win_prize;
 mod wordpress_dotcom;
+mod would_never_have;
 
 pub use a_part::APart;
+pub use addicting::Addicting;
 pub use adjective_double_degree::AdjectiveDoubleDegree;
 pub use adjective_of_a::AdjectiveOfA;
 pub use am_in_the_morning::AmInTheMorning;
@@ -229,6 +234,7 @@ pub use pronoun_contraction::PronounContraction;
 pub use pronoun_inflection_be::PronounInflectionBe;
 pub use punctuation_clusters::PunctuationClusters;
 pub use quantifier_needs_of::QuantifierNeedsOf;
+pub use quite_quiet::QuiteQuiet;
 pub use redundant_additive_adverbs::RedundantAdditiveAdverbs;
 pub use regionalisms::Regionalisms;
 pub use repeated_words::RepeatedWords;
@@ -253,6 +259,7 @@ pub use thing_think::ThingThink;
 pub use throw_rubbish::ThrowRubbish;
 pub use touristic::Touristic;
 pub use unclosed_quotes::UnclosedQuotes;
+pub use update_place_names::UpdatePlaceNames;
 pub use use_genitive::UseGenitive;
 pub use very_unique::VeryUnique;
 pub use was_aloud::WasAloud;
@@ -261,6 +268,7 @@ pub use whereas::Whereas;
 pub use widely_accepted::WidelyAccepted;
 pub use win_prize::WinPrize;
 pub use wordpress_dotcom::WordPressDotcom;
+pub use would_never_have::WouldNeverHave;
 
 use crate::{Document, LSend, render_markdown};
 
