@@ -670,16 +670,6 @@ mod tests {
     }
 
     #[test]
-    fn vary_to_very_correction() {
-        use crate::linting::tests::assert_suggestion_result;
-        assert_suggestion_result(
-            "I love you vary much.",
-            test_group(),
-            "I love you very much.",
-        );
-    }
-
-    #[test]
     fn the_to_that_respects() {
         use crate::linting::tests::assert_suggestion_result;
         assert_suggestion_result(

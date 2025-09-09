@@ -202,6 +202,16 @@ fn baited_breath() {
 // BeckAndCall
 // -none-
 
+// VaryMuch
+#[test]
+fn correct_vary_much() {
+    assert_suggestion_result(
+        "I love you vary much.",
+        lint_group(),
+        "I love you very much.",
+    );
+}
+
 // BeenThere
 // -none-
 

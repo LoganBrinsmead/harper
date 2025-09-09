@@ -204,6 +204,13 @@ pub fn lint_group() -> LintGroup {
             "Fixes `back and call` to `beck and call`.",
             LintKind::Eggcorn
         ),
+        "VaryMuch" => (
+            ["vary much"],
+            ["very much"],
+            "Did you mean `very much`?",
+            "Corrects the common typo `vary much` to `very much`.",
+            LintKind::Typo
+        ),
         "BeenThere" => (
             ["bee there"],
             ["been there"],
