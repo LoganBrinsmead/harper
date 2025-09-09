@@ -322,4 +322,12 @@ mod tests {
             ItsPossessive::default(),
         );
     }
+
+    #[test]
+    fn allows_way_better_than_original() {
+        assert_no_lints(
+            "It's way better than the original.",
+            ItsPossessive::default(),
+        );
+    }
 }

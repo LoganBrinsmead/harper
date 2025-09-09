@@ -663,4 +663,44 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn invalid_plural_with_is_and_article() {
+        // Use the suggestion helper to validate the correction.
+        // Expect singular agreement: "Is a desktop application".
+        use crate::linting::tests::assert_suggestion_result;
+        assert_suggestion_result(
+            "is a desktop applications",
+            test_group(),
+            "Is a desktop application",
+        );
+    }
+
+    #[test]
+    fn its_awesome_is_clean() {
+        assert_no_lints("It's awesome", test_group());
+    }
+
+    #[test]
+    fn vary_to_very_correction() {
+        use crate::linting::tests::assert_suggestion_result;
+        assert_suggestion_result(
+            "I love you vary much.",
+            test_group(),
+            "I love you very much.",
+        );
+    }
+
+    #[test]
+    // Moved to ItsPossessive module as a focused test.
+
+    #[test]
+    fn the_to_that_respects() {
+        use crate::linting::tests::assert_suggestion_result;
+        assert_suggestion_result(
+            "A man the respects your privacy.",
+            test_group(),
+            "A man that respects your privacy.",
+        );
+    }
 }
