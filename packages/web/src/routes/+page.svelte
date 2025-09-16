@@ -1,5 +1,6 @@
 <script module>
 import ChromeLogo from '$lib/ChromeLogo.svelte';
+import EdgeLogo from '$lib/EdgeLogo.svelte';
 import CodeLogo from '$lib/CodeLogo.svelte';
 import Editor from '$lib/Editor.svelte';
 import FirefoxLogo from '$lib/FirefoxLogo.svelte';
@@ -47,6 +48,10 @@ function agentHas(keyword) {
   {#if agentHas("firefox")}
 	  <a href="https://addons.mozilla.org/en-US/firefox/addon/private-grammar-checker-harper/" class="flex flex-row items-center [&>*]:m-2 hover:scale-105"
 	  	><FirefoxLogo width="40px" height="40px" />Add to Firefox</a
+	  >
+  {:else if agentHas("Edg")}
+	  <a href="https://microsoftedge.microsoft.com/addons/detail/private-grammar-checker-/ihjkkjfembmnjldmdchmadigpmapkpdh" class="flex flex-row items-center [&>*]:m-2 hover:scale-105"
+	  	><EdgeLogo width="40px" height="40px" />Add to Edge</a
 	  >
   {:else}
 	  <a href="https://chromewebstore.google.com/detail/private-grammar-checking/lodbfhdipoipcjmlebjbgmmgekckhpfb" class="flex flex-row items-center [&>*]:m-2 hover:scale-105"
