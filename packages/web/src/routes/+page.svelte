@@ -1,7 +1,7 @@
 <script module>
 import ChromeLogo from '$lib/ChromeLogo.svelte';
-import EdgeLogo from '$lib/EdgeLogo.svelte';
 import CodeLogo from '$lib/CodeLogo.svelte';
+import EdgeLogo from '$lib/EdgeLogo.svelte';
 import Editor from '$lib/Editor.svelte';
 import FirefoxLogo from '$lib/FirefoxLogo.svelte';
 import GitHubLogo from '$lib/GitHubLogo.svelte';
