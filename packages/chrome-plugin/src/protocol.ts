@@ -19,6 +19,8 @@ export type Request =
 	| GetUserDictionaryRequest
 	| GetActivationKeyRequest
 	| SetActivationKeyRequest
+	| GetThemePreferenceRequest
+	| SetThemePreferenceRequest
 	| OpenOptionsRequest;
 
 export type Response =
@@ -31,7 +33,8 @@ export type Response =
 	| GetDefaultStatusResponse
 	| GetEnabledDomainsResponse
 	| GetUserDictionaryResponse
-	| GetActivationKeyResponse;
+	| GetActivationKeyResponse
+	| GetThemePreferenceResponse;
 
 export type LintRequest = {
 	kind: 'lint';
@@ -160,6 +163,12 @@ export enum ActivationKey {
 	Control = 'control',
 }
 
+export enum ThemePreference {
+	System = 'system',
+	Light = 'light',
+	Dark = 'dark',
+}
+
 export type GetActivationKeyRequest = {
 	kind: 'getActivationKey';
 };
@@ -172,6 +181,20 @@ export type GetActivationKeyResponse = {
 export type SetActivationKeyRequest = {
 	kind: 'setActivationKey';
 	key: ActivationKey;
+};
+
+export type GetThemePreferenceRequest = {
+	kind: 'getThemePreference';
+};
+
+export type GetThemePreferenceResponse = {
+	kind: 'getThemePreference';
+	preference: ThemePreference;
+};
+
+export type SetThemePreferenceRequest = {
+	kind: 'setThemePreference';
+	preference: ThemePreference;
 };
 
 export type OpenOptionsRequest = {

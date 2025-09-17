@@ -1,11 +1,14 @@
 <script lang="ts">
 import { Button } from 'flowbite-svelte';
-import { createEventDispatcher } from 'svelte';
 import logo from '/logo.png';
 import Main from './Main.svelte';
 import Onboarding from './Onboarding.svelte';
+import ProtocolClient from '../ProtocolClient';
+import { ThemePreference } from '../protocol';
+import { applyThemePreference } from '../theme';
 
 let page: 'onboarding' | 'main' = $state('main');
+let themePreference = $state(ThemePreference.System);
 
 $effect(() => {
 	chrome.storage.local.get({ popupState: 'onboarding' }).then((result) => {
@@ -15,6 +18,14 @@ $effect(() => {
 
 $effect(() => {
 	chrome.storage.local.set({ popupState: page });
+});
+
+$effect(() => {
+	applyThemePreference(themePreference);
+});
+
+ProtocolClient.getThemePreference().then((preference) => {
+	themePreference = preference;
 });
 
 function openSettings() {

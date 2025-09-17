@@ -3,7 +3,8 @@ import { Button, Input, Select } from 'flowbite-svelte';
 import { Dialect, type LintConfig } from 'harper.js';
 import logo from '/logo.png';
 import ProtocolClient from '../ProtocolClient';
-import { ActivationKey } from '../protocol';
+import { ActivationKey, ThemePreference } from '../protocol';
+import { applyThemePreference } from '../theme';
 
 let lintConfig: LintConfig = $state({});
 let lintDescriptions: Record<string, string> = $state({});
@@ -13,6 +14,9 @@ let dialect = $state(Dialect.American);
 let defaultEnabled = $state(false);
 let activationKey: ActivationKey = $state(ActivationKey.Off);
 let userDict = $state('');
+let themePreference = $state(ThemePreference.System);
+let themeInitialized = $state(false);
+let themeDirty = $state(false);
 
 $effect(() => {
 	ProtocolClient.setLintConfig(lintConfig);
@@ -58,6 +62,26 @@ ProtocolClient.getActivationKey().then((d) => {
 ProtocolClient.getUserDictionary().then((d) => {
 	userDict = dictToString(d.toSorted());
 });
+
+ProtocolClient.getThemePreference().then((preference) => {
+	themeInitialized = true;
+	if (!themeDirty) {
+		themePreference = preference;
+	}
+});
+
+$effect(() => {
+	applyThemePreference(themePreference);
+});
+
+$effect(() => {
+	if (!themeInitialized && !themeDirty) return;
+	ProtocolClient.setThemePreference(themePreference);
+});
+
+function onThemeSelectionChange() {
+	themeDirty = true;
+}
 
 function configValueToString(value: boolean | undefined): string {
 	switch (value) {
@@ -139,6 +163,23 @@ async function exportEnabledDomainsCSV() {
             <option value={Dialect.British}>🇬🇧 British</option>
             <option value={Dialect.Australian}>🇦🇺 Australian</option>
             <option value={Dialect.Canadian}>🇨🇦 Canadian</option>
+          </Select>
+        </div>
+      </div>
+
+      <div class="space-y-5">
+        <div class="flex items-center justify-between">
+          <span class="font-medium">Theme</span>
+          <Select
+            size="sm"
+            color="primary"
+            class="w-44"
+            bind:value={themePreference}
+            on:change={onThemeSelectionChange}
+          >
+            <option value={ThemePreference.System}>🌗 System</option>
+            <option value={ThemePreference.Light}>🌞 Light</option>
+            <option value={ThemePreference.Dark}>🌙 Dark</option>
           </Select>
         </div>
       </div>

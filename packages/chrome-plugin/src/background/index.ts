@@ -16,6 +16,8 @@ import {
 	type GetEnabledDomainsResponse,
 	type GetLintDescriptionsRequest,
 	type GetLintDescriptionsResponse,
+	type GetThemePreferenceRequest,
+	type GetThemePreferenceResponse,
 	type GetUserDictionaryResponse,
 	type IgnoreLintRequest,
 	type LintRequest,
@@ -27,8 +29,10 @@ import {
 	type SetDefaultStatusRequest,
 	type SetDialectRequest,
 	type SetDomainStatusRequest,
+	type SetThemePreferenceRequest,
 	type SetUserDictionaryRequest,
 	type UnitResponse,
+	ThemePreference,
 } from '../protocol';
 
 console.log('background is running');
@@ -139,6 +143,10 @@ function handleRequest(message: Request): Promise<Response> {
 			return handleGetActivationKey();
 		case 'setActivationKey':
 			return handleSetActivationKey(message);
+		case 'getThemePreference':
+			return handleGetThemePreference();
+		case 'setThemePreference':
+			return handleSetThemePreference(message);
 		case 'openOptions':
 			chrome.runtime.openOptionsPage();
 			return createUnitResponse();
@@ -263,6 +271,21 @@ async function handleSetActivationKey(req: SetActivationKeyRequest): Promise<Uni
 	return createUnitResponse();
 }
 
+async function handleGetThemePreference(): Promise<GetThemePreferenceResponse> {
+	const preference = await getThemePreference();
+
+	return { kind: 'getThemePreference', preference };
+}
+
+async function handleSetThemePreference(req: SetThemePreferenceRequest): Promise<UnitResponse> {
+	if (!Object.values(ThemePreference).includes(req.preference)) {
+		throw new Error(`Invalid theme preference: ${req.preference}`);
+	}
+	await setThemePreference(req.preference);
+
+	return createUnitResponse();
+}
+
 /** Set the lint configuration inside the global `linter` and in permanent storage. */
 async function setLintConfig(lintConfig: LintConfig): Promise<void> {
 	await linter.setLintConfig(lintConfig);
@@ -307,6 +330,15 @@ async function getActivationKey(): Promise<ActivationKey> {
 
 async function setActivationKey(key: ActivationKey) {
 	await chrome.storage.local.set({ activationKey: key });
+}
+
+async function getThemePreference(): Promise<ThemePreference> {
+	const resp = await chrome.storage.local.get({ themePreference: ThemePreference.System });
+	return resp.themePreference;
+}
+
+async function setThemePreference(preference: ThemePreference): Promise<void> {
+	await chrome.storage.local.set({ themePreference: preference });
 }
 
 function initializeLinter(dialect: Dialect) {

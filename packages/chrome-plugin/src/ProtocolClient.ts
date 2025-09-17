@@ -1,7 +1,7 @@
 import type { Dialect, LintConfig } from 'harper.js';
 import type { UnpackedLint } from 'lint-framework';
 import { LRUCache } from 'lru-cache';
-import type { ActivationKey } from './protocol';
+import type { ActivationKey, ThemePreference } from './protocol';
 
 export default class ProtocolClient {
 	private static readonly lintCache = new LRUCache<string, Promise<any>>({
@@ -72,6 +72,14 @@ export default class ProtocolClient {
 
 	public static async setActivationKey(key: ActivationKey): Promise<void> {
 		await chrome.runtime.sendMessage({ kind: 'setActivationKey', key });
+	}
+
+	public static async getThemePreference(): Promise<ThemePreference> {
+		return (await chrome.runtime.sendMessage({ kind: 'getThemePreference' })).preference;
+	}
+
+	public static async setThemePreference(preference: ThemePreference): Promise<void> {
+		await chrome.runtime.sendMessage({ kind: 'setThemePreference', preference });
 	}
 
 	public static async addToUserDictionary(words: string[]): Promise<void> {
