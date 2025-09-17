@@ -262,6 +262,10 @@ export default class LintFramework {
 			this.renderRequested = false;
 		});
 	}
+
+	public setTheme(theme: 'light' | 'dark') {
+		this.popupHandler.setTheme(theme);
+	}
 }
 
 /**

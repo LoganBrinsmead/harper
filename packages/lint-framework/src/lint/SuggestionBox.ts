@@ -278,33 +278,31 @@ function styleTag() {
       to   { opacity: 1; }
     }
 
-      @media (prefers-color-scheme:dark){
-      code{background-color:#1f2d3d;color:#c9d1d9}
-      .harper-container{
+      :host(.harper-dark) code{background-color:#1f2d3d;color:#c9d1d9}
+      :host(.harper-dark) .harper-container{
       background:#0d1117;
       border-color:#30363d;
       box-shadow:0 4px 12px rgba(1,4,9,0.85)
       }
-      .harper-header{color:#e6edf3}
-      .harper-body{color:#8b949e}
-      .harper-btn{
+      :host(.harper-dark) .harper-header{color:#e6edf3}
+      :host(.harper-dark) .harper-body{color:#8b949e}
+      :host(.harper-dark) .harper-btn{
       background:#21262d;
       color:#c9d1d9
       }
-      .harper-btn:hover{filter:brightness(1.15)}
-      .harper-close-btn{color:#8b949e;}
-      .harper-close-btn:hover{color:#e6edf3;}
-      .harper-gear-btn{color:#8b949e;}
-      .harper-gear-btn:hover{color:#e6edf3;}
-      .harper-btn[style*="background: #2DA44E"]{background:#238636}
-      .harper-btn[style*="background: #e5e5e5"]{
+      :host(.harper-dark) .harper-btn:hover{filter:brightness(1.15)}
+      :host(.harper-dark) .harper-close-btn{color:#8b949e;}
+      :host(.harper-dark) .harper-close-btn:hover{color:#e6edf3;}
+      :host(.harper-dark) .harper-gear-btn{color:#8b949e;}
+      :host(.harper-dark) .harper-gear-btn:hover{color:#e6edf3;}
+      :host(.harper-dark) .harper-btn[style*="background: #2DA44E"]{background:#238636}
+      :host(.harper-dark) .harper-btn[style*="background: #e5e5e5"]{
       background:#4b4b4b;
       color:#ffffff
       }
-      .harper-hint-drawer{ border-top-color:#30363d; background:#151b23; color:#9aa4af; }
-      .harper-hint-icon{ background:#3a2f0b; color:#f2cc60; }
-      .harper-hint-title{ color:#e6edf3; }
-      }`,
+      :host(.harper-dark) .harper-hint-drawer{ border-top-color:#30363d; background:#151b23; color:#9aa4af; }
+      :host(.harper-dark) .harper-hint-icon{ background:#3a2f0b; color:#f2cc60; }
+      :host(.harper-dark) .harper-hint-title{ color:#e6edf3; }`,
 	]);
 }
 

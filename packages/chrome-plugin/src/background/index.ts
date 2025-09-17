@@ -31,8 +31,8 @@ import {
 	type SetDomainStatusRequest,
 	type SetThemePreferenceRequest,
 	type SetUserDictionaryRequest,
-	type UnitResponse,
 	ThemePreference,
+	type UnitResponse,
 } from '../protocol';
 
 console.log('background is running');

@@ -40,6 +40,7 @@ export default class PopupHandler {
 		openOptions?: () => Promise<void>;
 		addToUserDictionary?: (words: string[]) => Promise<void>;
 	};
+	private currentTheme: 'light' | 'dark';
 
 	constructor(actions: {
 		getActivationKey?: () => Promise<ActivationKey>;
@@ -57,6 +58,8 @@ export default class PopupHandler {
 		this.pointerDownCallback = (e) => {
 			this.onPointerDown(e);
 		};
+		this.currentTheme = 'light';
+		this.applyThemeClass();
 
 		this.updateActivationKeyListener();
 	}
@@ -124,6 +127,19 @@ export default class PopupHandler {
 		}
 
 		this.renderBox.render(tree);
+	}
+
+	public setTheme(theme: 'light' | 'dark') {
+		if (this.currentTheme === theme) {
+			return;
+		}
+		this.currentTheme = theme;
+		this.applyThemeClass();
+	}
+
+	private applyThemeClass() {
+		const host = this.renderBox.getShadowHost();
+		host.classList.toggle('harper-dark', this.currentTheme === 'dark');
 	}
 
 	/** Synchronize the hint with the currently focused lint.
