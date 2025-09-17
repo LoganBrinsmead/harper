@@ -245,7 +245,7 @@ async function exportEnabledDomainsCSV() {
               <div class="flex items-start justify-between gap-4">
                 <div class="space-y-0.5">
                   <p class="font-medium text-gray-900 dark:text-gray-100">{key}</p>
-                  <p class="text-xs text-gray-600 dark:text-gray-300">{@html lintDescriptions[key]}</p>
+                  <p class="text-xs text-gray-600 dark:text-gray-300 dark:[&_code]:text-black">{@html lintDescriptions[key]}</p>
                 </div>
                 <Select
                   size="sm"
