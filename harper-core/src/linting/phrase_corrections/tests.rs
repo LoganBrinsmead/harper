@@ -164,6 +164,16 @@ fn correct_as_it_happens() {
     );
 }
 
+// AsLongAs
+#[test]
+fn correct_as_long_as() {
+    assert_suggestion_result(
+        "server loads up fine but cant log on client side aslong as the plugin is installed",
+        lint_group(),
+        "server loads up fine but cant log on client side as long as the plugin is installed",
+    );
+}
+
 // AsOfLate
 #[test]
 fn corrects_as_of_lately() {
@@ -173,9 +183,6 @@ fn corrects_as_of_lately() {
         "I haven't noticed any crashing with AMDGPU as of late, so this looks to not be an issue anymore.",
     )
 }
-
-// AsWell
-// -none-
 
 // AtFaceValue
 #[test]
@@ -536,9 +543,6 @@ fn corrects_far_and_few_between() {
 // FetalPosition
 // -none-
 
-// ForAllIntentsAndPurposes
-// -none-
-
 // ForALongTime
 #[test]
 fn test_for_a_long_time() {
@@ -687,9 +691,6 @@ fn test_in_a_while() {
         "We’ll talk again in a while.",
     );
 }
-
-// InCase
-// -none-
 
 // InNeedOf
 #[test]
@@ -900,16 +901,6 @@ fn detect_monumentous_real_world() {
     );
 }
 
-// MorePreferable
-#[test]
-fn correct_more_preferable() {
-    assert_suggestion_result(
-        "Is it more preferable to use process.env.variable or env.parsed.variable?",
-        lint_group(),
-        "Is it preferable to use process.env.variable or env.parsed.variable?",
-    );
-}
-
 // MyHouse
 // -none-
 
@@ -967,6 +958,9 @@ fn detect_nerve_racking_no_hyphen() {
 
 // NotTo
 // -none-
+
+// NotUncommon moved to phrase_set_corrections as part of the
+// generalized double negative mapping.
 
 // OfCourse
 // See also: tests in `of_course.rs` for "of curse/corse" → "of course" corrections
@@ -1148,6 +1142,26 @@ fn correct_iirc_correctly() {
 
 // RoadMap
 // -none-
+
+// RulesOfThumb
+
+#[test]
+fn correct_rules_of_thumbs() {
+    assert_suggestion_result(
+        "Thanks. 0.2 is just from my rule of thumbs.",
+        lint_group(),
+        "Thanks. 0.2 is just from my rules of thumb.",
+    );
+}
+
+#[test]
+fn correct_rules_of_thumbs_hyphenated() {
+    assert_suggestion_result(
+        "Add rule-of-thumbs for basic metrics, like \"Spill more than 1GB is a red flag\".",
+        lint_group(),
+        "Add rules of thumb for basic metrics, like \"Spill more than 1GB is a red flag\".",
+    );
+}
 
 // SameAs
 // -none-
@@ -1438,11 +1452,6 @@ fn now_on_hold() {
 #[test]
 fn thanks_lot() {
     assert_suggestion_result("thanks lot", lint_group(), "thanks a lot");
-}
-
-#[test]
-fn thanks_alot() {
-    assert_suggestion_result("thanks alot", lint_group(), "thanks a lot");
 }
 
 #[test]
