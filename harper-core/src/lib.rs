@@ -101,8 +101,8 @@ pub fn remove_overlaps_map<K: Ord>(lint_map: &mut BTreeMap<K, Vec<Lint>>) {
     }
 
     let mut removal_flags: Vec<Vec<bool>> = lint_map
-        .iter()
-        .map(|(_, lints)| vec![false; lints.len()])
+        .values()
+        .map(|lints| vec![false; lints.len()])
         .collect();
 
     let mut spans = Vec::with_capacity(total);

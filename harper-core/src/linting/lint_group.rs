@@ -650,7 +650,7 @@ impl Default for LintGroup {
 
 impl Linter for LintGroup {
     fn lint(&mut self, document: &Document) -> Vec<Lint> {
-        self.organized_lints(&document)
+        self.organized_lints(document)
             .into_values()
             .flatten()
             .collect()

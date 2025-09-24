@@ -1,6 +1,5 @@
 #![doc = include_str!("../README.md")]
 
-use std::collections::HashMap;
 use std::convert::Into;
 use std::io::Cursor;
 use std::sync::Arc;
