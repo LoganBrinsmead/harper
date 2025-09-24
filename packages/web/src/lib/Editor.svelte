@@ -30,9 +30,7 @@ let lfw = new LintFramework(
 		// The framework expects grouped lints keyed by source
 		const entries = await Promise.all(
 			Object.entries(raw).map(async ([source, lintGroup]) => {
-				const unpacked = await Promise.all(
-					lintGroup.map((lint) => unpackLint(text, lint, linter, source)),
-				);
+				const unpacked = await Promise.all(lintGroup.map((lint) => unpackLint(text, lint, linter)));
 				return [source, unpacked] as const;
 			}),
 		);
