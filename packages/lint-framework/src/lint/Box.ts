@@ -19,6 +19,8 @@ export type LintBox = Box & {
 };
 
 export type IgnorableLintBox = LintBox & {
+	/** The rule that produced the lint */
+	rule: string;
 	ignoreLint?: () => Promise<void>;
 };
 
