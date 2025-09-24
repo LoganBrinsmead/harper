@@ -1,5 +1,6 @@
 #![doc = include_str!("../README.md")]
 
+use std::collections::HashMap;
 use std::convert::Into;
 use std::io::Cursor;
 use std::sync::Arc;
@@ -250,6 +251,45 @@ impl Linter {
         ctx.default_hash()
     }
 
+    pub fn organized_lints(&mut self, text: String, language: Language) -> JsValue {
+        let source: Vec<_> = text.chars().collect();
+        let source = Lrc::new(source);
+
+        let parser = language.create_parser();
+
+        let document = Document::new_from_vec(source.clone(), &parser, &self.dictionary);
+
+        let temp = self.lint_group.config.clone();
+        self.lint_group.config.fill_with_curated();
+
+        let mut lints = self.lint_group.organized_lints(&document);
+
+        self.lint_group.config = temp;
+
+        for value in lints.values_mut() {
+            remove_overlaps(value);
+            self.ignored_lints.remove_ignored(value, &document);
+        }
+
+        let map: HashMap<String, Vec<Lint>> = lints
+            .into_iter()
+            .map(|(s, ls)| {
+                (
+                    s,
+                    ls.into_iter()
+                        .map(|l| {
+                            let problem_text = l.span.get_content_string(&source);
+                            Lint::new(l, problem_text, language)
+                        })
+                        .collect(),
+                )
+            })
+            .collect();
+
+        let serializer = Serializer::json_compatible();
+        map.serialize(&serializer).unwrap()
+    }
+
     /// Perform the configured linting on the provided text.
     pub fn lint(&mut self, text: String, language: Language) -> Vec<Lint> {
         let source: Vec<_> = text.chars().collect();
@@ -267,7 +307,6 @@ impl Linter {
         self.lint_group.config = temp;
 
         remove_overlaps(&mut lints);
-
         self.ignored_lints.remove_ignored(&mut lints, &document);
 
         lints
