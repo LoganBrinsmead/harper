@@ -8,6 +8,7 @@ use std::sync::Arc;
 use harper_core::language_detection::is_doc_likely_english;
 use harper_core::linting::{LintGroup, Linter as _};
 use harper_core::parsers::{IsolateEnglish, Markdown, Parser, PlainEnglish};
+use harper_core::remove_overlaps_map;
 use harper_core::{
     CharString, DictWordMetadata, Document, IgnoredLints, LintContext, Lrc, remove_overlaps,
     spell::{Dictionary, FstDictionary, MergedDictionary, MutableDictionary},
@@ -266,8 +267,8 @@ impl Linter {
 
         self.lint_group.config = temp;
 
+        remove_overlaps_map(&mut lints);
         for value in lints.values_mut() {
-            remove_overlaps(value);
             self.ignored_lints.remove_ignored(value, &document);
         }
 
