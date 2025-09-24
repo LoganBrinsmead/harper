@@ -251,7 +251,7 @@ impl Linter {
         ctx.default_hash()
     }
 
-    pub fn organized_lints(&mut self, text: String, language: Language) -> JsValue {
+    pub fn organized_lints(&mut self, text: String, language: Language) -> Vec<OrganizedGroup> {
         let source: Vec<_> = text.chars().collect();
         let source = Lrc::new(source);
 
@@ -271,23 +271,19 @@ impl Linter {
             self.ignored_lints.remove_ignored(value, &document);
         }
 
-        let map: HashMap<String, Vec<Lint>> = lints
+        lints
             .into_iter()
-            .map(|(s, ls)| {
-                (
-                    s,
-                    ls.into_iter()
-                        .map(|l| {
-                            let problem_text = l.span.get_content_string(&source);
-                            Lint::new(l, problem_text, language)
-                        })
-                        .collect(),
-                )
+            .map(|(s, ls)| OrganizedGroup {
+                group: s,
+                lints: ls
+                    .into_iter()
+                    .map(|l| {
+                        let problem_text = l.span.get_content_string(&source);
+                        Lint::new(l, problem_text, language)
+                    })
+                    .collect(),
             })
-            .collect();
-
-        let serializer = Serializer::json_compatible();
-        map.serialize(&serializer).unwrap()
+            .collect()
     }
 
     /// Perform the configured linting on the provided text.
@@ -464,7 +460,7 @@ impl Suggestion {
 /// An error found in provided text.
 ///
 /// May include zero or more suggestions that may fix the problematic text.
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[wasm_bindgen]
 pub struct Lint {
     inner: harper_core::linting::Lint,
@@ -584,4 +580,14 @@ impl From<harper_core::Span<char>> for Span {
     fn from(value: harper_core::Span<char>) -> Self {
         Span::new(value.start, value.end)
     }
+}
+
+/// Used exclusively for [`Linter::organized_lints`]
+#[wasm_bindgen]
+#[derive(Serialize, Deserialize, Clone)]
+pub struct OrganizedGroup {
+    #[wasm_bindgen(getter_with_clone)]
+    pub group: String,
+    #[wasm_bindgen(getter_with_clone)]
+    pub lints: Vec<Lint>,
 }
