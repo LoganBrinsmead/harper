@@ -4,8 +4,16 @@ import { isVisible } from './domUtils';
 import Highlights from './Highlights';
 import PopupHandler from './PopupHandler';
 import type { UnpackedLint } from './unpackLint';
+import ProtocolClient from '../../../chrome-plugin/src/ProtocolClient'
 
 type ActivationKey = 'off' | 'shift' | 'control';
+
+type Modifier = 'Ctrl' | 'Shift' | 'Alt';
+
+type Hotkey = {
+  modifiers: Modifier[];
+  key: string;
+};
 
 /** Events on an input (any kind) that can trigger a re-render. */
 const INPUT_EVENTS = ['focus', 'keyup', 'paste', 'change', 'scroll'];
@@ -35,6 +43,7 @@ export default class LintFramework {
 	private actions: {
 		ignoreLint?: (hash: string) => Promise<void>;
 		getActivationKey?: () => Promise<ActivationKey>;
+		getHotkey?: () => Promise<Hotkey>;
 		openOptions?: () => Promise<void>;
 		addToUserDictionary?: (words: string[]) => Promise<void>;
 	};
@@ -44,6 +53,7 @@ export default class LintFramework {
 		actions: {
 			ignoreLint?: (hash: string) => Promise<void>;
 			getActivationKey?: () => Promise<ActivationKey>;
+			getHotkey?: () => Promise<Hotkey>;
 			openOptions?: () => Promise<void>;
 			addToUserDictionary?: (words: string[]) => Promise<void>;
 		},
@@ -133,6 +143,36 @@ export default class LintFramework {
 		this.requestRender();
 	}
 
+	/**
+	 * Hotkey to apply the suggestion of the most likely word
+	 */
+	public async lintHotkey() {
+		let hotkey = await ProtocolClient.getHotkey();
+
+		document.addEventListener('keydown', (event: KeyboardEvent) => {
+
+			if (!hotkey) return;
+
+			let key = event.key.toLowerCase();
+			let expectedKey = hotkey.key.toLowerCase();
+
+			let hasCtrl = event.ctrlKey === hotkey.modifiers.includes('Ctrl');
+			let hasAlt = event.altKey === hotkey.modifiers.includes('Alt');
+			let hasShift = event.shiftKey === hotkey.modifiers.includes('Shift');
+
+			let match = key === expectedKey && hasCtrl && hasAlt && hasShift;
+
+			if (match) {
+				event.preventDefault();
+				this.lastBoxes[this.lastBoxes.length - 1].applySuggestion(this.lastLints[this.lastLints.length - 1].lints[this.lastLints[0].lints.length - 1].suggestions[0]);
+
+			}
+
+		});
+
+	}
+
+
 	public async addTarget(target: Node) {
 		if (!this.targets.has(target)) {
 			this.targets.add(target);
@@ -193,6 +233,7 @@ export default class LintFramework {
 	}
 
 	private attachWindowListeners() {
+		this.lintHotkey();
 		for (const event of PAGE_EVENTS) {
 			window.addEventListener(event, this.updateEventCallback);
 		}
