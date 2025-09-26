@@ -69,6 +69,7 @@ export default function computeLintBoxes(
 				lint,
 				source,
 				rule,
+				range: range instanceof Range ? range : undefined,
 				applySuggestion: (sug: UnpackedSuggestion) => {
 					const current = isFormEl(el)
 						? (el as HTMLInputElement | HTMLTextAreaElement).value
