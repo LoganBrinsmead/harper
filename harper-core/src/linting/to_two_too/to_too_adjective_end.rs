@@ -63,11 +63,10 @@ impl ExprLinter for ToTooAdjectiveEnd {
             return None;
         }
 
-        if let Some(prev_token) = prev_non_ws {
-            if prepositional_preceder().matches_token(prev_token, source) {
+        if let Some(prev_token) = prev_non_ws
+            && prepositional_preceder().matches_token(prev_token, source) {
                 return None;
             }
-        }
 
         // Find the next non-whitespace after the adjective
         let mut j = idx + 1;

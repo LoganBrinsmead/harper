@@ -63,11 +63,10 @@ impl ExprLinter for ToTooAdjectivePunct {
         }
 
         let prev_non_ws = tokens[..to_index].iter().rfind(|t| !t.kind.is_whitespace());
-        if let Some(prev_token) = prev_non_ws {
-            if prepositional_preceder().matches_token(prev_token, source) {
+        if let Some(prev_token) = prev_non_ws
+            && prepositional_preceder().matches_token(prev_token, source) {
                 return None;
             }
-        }
 
         let to_tok = &tokens[to_index];
 
