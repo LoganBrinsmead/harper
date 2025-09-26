@@ -141,19 +141,19 @@ pub fn lint_group() -> LintGroup {
             "Corrects `as it so happens` to `as it happens`.",
             LintKind::Usage
         ),
+        "AsLongAs" => (
+            ["aslong as"],
+            ["as long as"],
+            "`As long` should be written as two words.",
+            "Corrects `aslong as` to `as long as`.",
+            LintKind::BoundaryError
+        ),
         "AsOfLate" => (
             ["as of lately"],
             ["as of late"],
             "The standard form is `as of late`.",
             "Corrects `as of lately` to `as of late`.",
             LintKind::WordChoice
-        ),
-        "AsWell" => (
-            ["aswell"],
-            ["as well"],
-            "`as well` should be written as two words.",
-            "Corrects `aswell` to `as well`.",
-            LintKind::BoundaryError
         ),
         "AtFaceValue" => (
             ["on face value"],
@@ -223,6 +223,13 @@ pub fn lint_group() -> LintGroup {
             ["beforehand"],
             "Prefer the single-word adverb `beforehand`.",
             "`Beforehand` functions as a fixed adverb meaning ‘in advance’; writing it as two words or with a hyphen is nonstandard and can jar readers."
+        ),
+        "BesideThePoint" => (
+            ["besides the point"],
+            ["beside the point"],
+            "Use `beside` in the idiom `beside the point`.",
+            "Corrects `besides the point` to `beside the point`.",
+            LintKind::Eggcorn
         ),
         "BestRegards" => (
             ["beat regards"],
@@ -327,6 +334,13 @@ pub fn lint_group() -> LintGroup {
             "Use the full verb “want” after negation: “don't want” or “do not want.”",
             "In English, negation still requires the complete verb form (“want”), so avoid truncating it to “wan.”",
             LintKind::Typo
+        ),
+        "DontCan" => (
+            ["don't can"],
+            ["can't", "cannot"],
+            "The grammatically correct form is `can't` or `cannot`.",
+            "Corrects `don't can` to `can't` or `cannot`.",
+            LintKind::Grammar
         ),
         "EachAndEveryOne" => (
             ["each and everyone"],
@@ -598,13 +612,6 @@ pub fn lint_group() -> LintGroup {
             "When describing a timeframe, use `a while`.",
             "Corrects the missing article in `in while`, forming `in a while`.",
             LintKind::Grammar
-        ),
-        "InCase" => (
-            ["incase"],
-            ["in case"],
-            "`In case` should be written as two words.",
-            "Corrects `incase` to `in case`.",
-            LintKind::BoundaryError
         ),
         "InNeedOf" => (
             ["in need for"],
@@ -1023,11 +1030,11 @@ pub fn lint_group() -> LintGroup {
             LintKind::Usage
         ),
         "ThanksALot" => (
-            ["thanks lot", "thanks alot"],
+            ["thanks lot"],
             ["thanks a lot"],
-            "Prefer the two-word expression `thanks a lot`.",
-            "`Thanks a lot` is the fixed, widely accepted form, while variants like `thanks lot` or `thanks alot` are non-standard and can jar readers.",
-            LintKind::Usage
+            "The indefinite article `a` is required in `thanks a lot`.",
+            "Corrects the missing article in `thanks lot`, forming `thanks a lot`.",
+            LintKind::Grammar
         ),
         "ThatChallenged" => (
             ["the challenged"],

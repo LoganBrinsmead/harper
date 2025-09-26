@@ -252,8 +252,8 @@
 # Nᴹ+       J/P   D+  Nᴹ/Vg/J/P NPl/V3+ .
 >
 #
-> More            advanced ( " higher - order  " ) HMMs learn  the probabilities not     only  of pairs
-# NPr/I/VB/J/R/Dq VP/J     . . NSg/JC . NSg/VB . . ?    NSg/VB D   NPl+          NSg/R/C J/R/C P  NPl/V3+
+> More            advanced ( " higher - order   " ) HMMs learn  the probabilities not     only  of pairs
+# NPr/I/VB/J/R/Dq VP/J     . . NSg/JC . N🅪Sg/VB . . ?    NSg/VB D   NPl+          NSg/R/C J/R/C P  NPl/V3+
 > but     triples or    even     larger sequences . So        , for example , if    you've just seen    a
 # NSg/C/P NPl/V3  NPr/C NSg/VB/J JC     NPl/V3+   . NSg/I/J/C . C/P NSg/VB+ . NSg/C K      VB/J NSg/VPp D/P
 > noun    followed by      a   verb    , the next    item    may     be      very likely a   preposition ,
@@ -428,10 +428,10 @@
 # NSg/R/C VP/J     . NSg/R   C/P     P  D   NPr🅪Sg/VB/Am/Au+ VP/J     NPr/J/P Nᴹ/Vg/J       NSg/IPl+ C/P
 > this   particular dataset ) . Thus , it       should not     be      assumed that         the results
 # I/Ddem NSg/J      NSg     . . NSg  . NPr/ISg+ VXB    NSg/R/C NSg/VXB VP/J    NSg/I/C/Ddem D+  NPl/V3+
-> reported here    are the best       that          can     be      achieved with a    given       approach ; nor   even
-# VP/J     NSg/J/R VB  D   NPr/VXB/JS NSg/I/C/Ddem+ NPr/VXB NSg/VXB VP/J     P    D/P+ NSg/VB/J/P+ N🅪Sg/VB+ . NSg/C NSg/VB/J
-> the best        that          have    been    achieved with a    given       approach .
-# D+  NPr/VXB/JS+ NSg/I/C/Ddem+ NSg/VXB NSg/VPp VP/J     P    D/P+ NSg/VB/J/P+ N🅪Sg/VB+ .
+> reported here    are the best       that          can     be      achieved with a    given        approach ; nor   even
+# VP/J     NSg/J/R VB  D   NPr/VXB/JS NSg/I/C/Ddem+ NPr/VXB NSg/VXB VP/J     P    D/P+ NSg/VPp/J/P+ N🅪Sg/VB+ . NSg/C NSg/VB/J
+> the best        that          have    been    achieved with a    given        approach .
+# D+  NPr/VXB/JS+ NSg/I/C/Ddem+ NSg/VXB NSg/VPp VP/J     P    D/P+ NSg/VPp/J/P+ N🅪Sg/VB+ .
 >
 #
 > In      2014 , a    paper      reporting using   the structure regularization method for
