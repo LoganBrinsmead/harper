@@ -17830,6 +17830,8 @@ snapshots:
 
   boolbase@1.0.0: {}
 
+  boundary@2.0.0: {}
+
   bowser@2.12.1: {}
 
   brace-expansion@1.1.12:
