@@ -1192,6 +1192,7 @@ pub fn lint_group() -> LintGroup {
             ["to worry about", "too worried about"],
             "Did you mean the progressive form?",
             "Fixes incorrect use of `to worried about`."
+        ),
         "The" => (
             ["teh"],
             ["the"],
