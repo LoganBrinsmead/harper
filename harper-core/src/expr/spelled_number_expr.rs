@@ -9,7 +9,7 @@ use super::{Expr, SequenceExpr};
 pub struct SpelledNumberExpr;
 
 impl Expr for SpelledNumberExpr {
-    fn run(&self, cursor: usize, tokens: &[Token], source: &[char]) -> Option<Span> {
+    fn run(&self, cursor: usize, tokens: &[Token], source: &[char]) -> Option<Span<Token>> {
         if tokens.is_empty() {
             return None;
         }
@@ -53,10 +53,10 @@ impl Expr for SpelledNumberExpr {
 
         let tens_units_compounds = SequenceExpr::default()
             .then(WordSet::new(tens))
-            .then(LongestMatchOf::new(vec![
+            .then_any_of(vec![
                 Box::new(|t: &Token, _s: &[char]| t.kind.is_hyphen()),
                 Box::new(WhitespacePattern),
-            ]))
+            ])
             .then(WordSet::new(units));
 
         let expr =
@@ -69,25 +69,9 @@ impl Expr for SpelledNumberExpr {
 #[cfg(test)]
 mod tests {
     use super::SpelledNumberExpr;
+    use crate::Document;
     use crate::expr::ExprExt;
-    use crate::{Document, Span};
-
-    trait SpanVecExt {
-        fn to_strings(&self, doc: &Document) -> Vec<String>;
-    }
-
-    impl SpanVecExt for Vec<Span> {
-        fn to_strings(&self, doc: &Document) -> Vec<String> {
-            self.iter()
-                .map(|sp| {
-                    doc.get_tokens()[sp.start..sp.end]
-                        .iter()
-                        .map(|tok| doc.get_span_content_str(&tok.span))
-                        .collect::<String>()
-                })
-                .collect()
-        }
-    }
+    use crate::linting::tests::SpanVecExt;
 
     #[test]
     fn matches_single_digit() {

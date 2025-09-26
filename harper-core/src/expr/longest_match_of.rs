@@ -1,6 +1,6 @@
 use crate::{Span, Token, expr::Expr};
 
-/// A [`Step`] that returns the farthest offset of the longest match in a list of expressions.
+/// An [`Expr`] that returns the farthest offset of the longest match in a list of expressions.
 #[derive(Default)]
 pub struct LongestMatchOf {
     exprs: Vec<Box<dyn Expr>>,
@@ -17,8 +17,8 @@ impl LongestMatchOf {
 }
 
 impl Expr for LongestMatchOf {
-    fn run(&self, cursor: usize, tokens: &[Token], source: &[char]) -> Option<Span> {
-        let mut longest: Option<Span> = None;
+    fn run(&self, cursor: usize, tokens: &[Token], source: &[char]) -> Option<Span<Token>> {
+        let mut longest: Option<Span<Token>> = None;
 
         for expr in self.exprs.iter() {
             let Some(window) = expr.run(cursor, tokens, source) else {

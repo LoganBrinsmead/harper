@@ -2,17 +2,16 @@ use std::cmp::Ordering;
 use std::collections::VecDeque;
 use std::fmt::Display;
 
-use harper_brill::{Chunker, Tagger, brill_chunker, brill_tagger};
+use harper_brill::{Chunker, Tagger, brill_tagger, burn_chunker};
 use paste::paste;
 
-use crate::expr::{Expr, ExprExt, LongestMatchOf, Repeating, SequenceExpr};
+use crate::expr::{Expr, ExprExt, FirstMatchOf, Repeating, SequenceExpr};
 use crate::parsers::{Markdown, MarkdownOptions, Parser, PlainEnglish};
 use crate::patterns::WordSet;
 use crate::punctuation::Punctuation;
+use crate::spell::{Dictionary, FstDictionary};
 use crate::vec_ext::VecExt;
-use crate::{
-    Dictionary, FatStringToken, FatToken, FstDictionary, Lrc, Token, TokenKind, TokenStringExt,
-};
+use crate::{CharStringExt, FatStringToken, FatToken, Lrc, Token, TokenKind, TokenStringExt};
 use crate::{OrdinalSuffix, Span};
 
 /// A document containing some amount of lexed and parsed English text.
@@ -32,7 +31,7 @@ impl Document {
     /// Locate all the tokens that intersect a provided span.
     ///
     /// Desperately needs optimization.
-    pub fn token_indices_intersecting(&self, span: Span) -> Vec<usize> {
+    pub fn token_indices_intersecting(&self, span: Span<char>) -> Vec<usize> {
         self.tokens()
             .enumerate()
             .filter_map(|(idx, tok)| tok.span.overlaps_with(span).then_some(idx))
@@ -42,7 +41,7 @@ impl Document {
     /// Locate all the tokens that intersect a provided span and convert them to [`FatToken`]s.
     ///
     /// Desperately needs optimization.
-    pub fn fat_tokens_intersecting(&self, span: Span) -> Vec<FatToken> {
+    pub fn fat_tokens_intersecting(&self, span: Span<char>) -> Vec<FatToken> {
         let indices = self.token_indices_intersecting(span);
 
         indices
@@ -138,35 +137,45 @@ impl Document {
         self.condense_number_suffixes();
         self.condense_ellipsis();
         self.condense_latin();
+        self.condense_filename_extensions();
+        self.condense_tldr();
+        self.condense_ampersand_pairs();
+        self.condense_slash_pairs();
         self.match_quotes();
 
-        let token_strings: Vec<_> = self
-            .tokens
-            .iter()
-            .filter(|t| !t.kind.is_whitespace())
-            .map(|t| self.get_span_content_str(&t.span))
-            .collect();
+        let chunker = burn_chunker();
+        let tagger = brill_tagger();
 
-        let token_tags = brill_tagger().tag_sentence(&token_strings);
-        let np_flags = brill_chunker().chunk_sentence(&token_strings, &token_tags);
+        for sent in self.tokens.iter_sentences_mut() {
+            let token_strings: Vec<_> = sent
+                .iter()
+                .filter(|t| !t.kind.is_whitespace())
+                .map(|t| t.span.get_content_string(&self.source))
+                .collect();
 
-        let mut i = 0;
+            let token_tags = tagger.tag_sentence(&token_strings);
+            let np_flags = chunker.chunk_sentence(&token_strings, &token_tags);
 
-        // Annotate word metadata
-        for token in self.tokens.iter_mut() {
-            if let TokenKind::Word(meta) = &mut token.kind {
-                let word_source = token.span.get_content(&self.source);
-                let mut found_meta = dictionary.get_word_metadata(word_source).cloned();
+            let mut i = 0;
 
-                if let Some(inner) = &mut found_meta {
-                    inner.pos_tag = token_tags[i];
-                    inner.np_member = Some(np_flags[i]);
+            // Annotate DictWord metadata
+            for token in sent.iter_mut() {
+                if let TokenKind::Word(meta) = &mut token.kind {
+                    let word_source = token.span.get_content(&self.source);
+                    let mut found_meta = dictionary
+                        .get_lexeme_metadata(word_source)
+                        .map(|c| c.into_owned());
+
+                    if let Some(inner) = &mut found_meta {
+                        inner.pos_tag = token_tags[i].or_else(|| inner.infer_pos_tag());
+                        inner.np_member = Some(np_flags[i]);
+                    }
+
+                    *meta = found_meta;
+                    i += 1;
+                } else if !token.kind.is_whitespace() {
+                    i += 1;
                 }
-
-                *meta = found_meta;
-                i += 1;
-            } else if !token.kind.is_whitespace() {
-                i += 1;
             }
         }
     }
@@ -174,10 +183,10 @@ impl Document {
     /// Convert all sets of newlines greater than 2 to paragraph breaks.
     fn newlines_to_breaks(&mut self) {
         for token in &mut self.tokens {
-            if let TokenKind::Newline(n) = token.kind {
-                if n >= 2 {
-                    token.kind = TokenKind::ParagraphBreak;
-                }
+            if let TokenKind::Newline(n) = token.kind
+                && n >= 2
+            {
+                token.kind = TokenKind::ParagraphBreak;
             }
         }
     }
@@ -314,19 +323,16 @@ impl Document {
         self.fat_tokens().map(|t| t.into())
     }
 
-    pub fn get_span_content(&self, span: &Span) -> &[char] {
+    pub fn get_span_content(&self, span: &Span<char>) -> &[char] {
         span.get_content(&self.source)
     }
 
-    pub fn get_span_content_str(&self, span: &Span) -> String {
+    pub fn get_span_content_str(&self, span: &Span<char>) -> String {
         String::from_iter(self.get_span_content(span))
     }
 
     pub fn get_full_string(&self) -> String {
-        self.get_span_content_str(&Span {
-            start: 0,
-            end: self.source.len(),
-        })
+        self.get_span_content_str(&Span::new(0, self.source.len()))
     }
 
     pub fn get_full_content(&self) -> &[char] {
@@ -379,13 +385,12 @@ impl Document {
 
             // TODO: Allow spaces between `a` and `b`
 
-            if let (TokenKind::Number(..), TokenKind::Word(..)) = (&a.kind, &b.kind) {
-                if let Some(found_suffix) =
+            if let (TokenKind::Number(..), TokenKind::Word(..)) = (&a.kind, &b.kind)
+                && let Some(found_suffix) =
                     OrdinalSuffix::from_chars(self.get_span_content(&b.span))
-                {
-                    self.tokens[idx].kind.as_mut_number().unwrap().suffix = Some(found_suffix);
-                    replace_starts.push(idx);
-                }
+            {
+                self.tokens[idx].kind.as_mut_number().unwrap().suffix = Some(found_suffix);
+                replace_starts.push(idx);
             }
         }
 
@@ -437,11 +442,11 @@ impl Document {
     }
 
     thread_local! {
-        static LATIN_EXPR: Lrc<LongestMatchOf> = Document::uncached_latin_expr();
+        static LATIN_EXPR: Lrc<FirstMatchOf> = Document::uncached_latin_expr();
     }
 
-    fn uncached_latin_expr() -> Lrc<LongestMatchOf> {
-        Lrc::new(LongestMatchOf::new(vec![
+    fn uncached_latin_expr() -> Lrc<FirstMatchOf> {
+        Lrc::new(FirstMatchOf::new(vec![
             Box::new(
                 SequenceExpr::default()
                     .then(WordSet::new(&["etc", "vs"]))
@@ -565,6 +570,222 @@ impl Document {
         self.tokens.remove_indices(to_remove);
     }
 
+    /// Condenses likely filename extensions down to single tokens.
+    fn condense_filename_extensions(&mut self) {
+        if self.tokens.len() < 2 {
+            return;
+        }
+
+        let mut to_remove = VecDeque::new();
+
+        let mut cursor = 1;
+
+        let mut ext_start = None;
+
+        loop {
+            // left context, dot, extension, right context
+            let l = self.get_token_offset(cursor, -2);
+            let d = &self.tokens[cursor - 1];
+            let x = &self.tokens[cursor];
+            let r = self.get_token_offset(cursor, 1);
+
+            let is_ext_chunk = d.kind.is_period()
+                && x.kind.is_word()
+                && x.span.len() <= 3
+                && ((l.is_none_or(|t| t.kind.is_whitespace())
+                    && r.is_none_or(|t| t.kind.is_whitespace()))
+                    || (l.is_some_and(|t| t.kind.is_open_round())
+                        && r.is_some_and(|t| t.kind.is_close_round())))
+                && {
+                    let ext_chars = x.span.get_content(&self.source);
+                    ext_chars.iter().all(|c| c.is_ascii_lowercase())
+                        || ext_chars.iter().all(|c| c.is_ascii_uppercase())
+                };
+
+            if is_ext_chunk {
+                if ext_start.is_none() {
+                    ext_start = Some(cursor - 1);
+                    self.tokens[cursor - 1].kind = TokenKind::Unlintable;
+                } else {
+                    to_remove.push_back(cursor - 1);
+                }
+
+                to_remove.push_back(cursor);
+                cursor += 1;
+            } else {
+                if let Some(start) = ext_start {
+                    let end = self.tokens[cursor - 2].span.end;
+                    let start_tok: &mut Token = &mut self.tokens[start];
+                    start_tok.span.end = end;
+                }
+
+                ext_start = None;
+            }
+
+            cursor += 1;
+
+            if cursor >= self.tokens.len() {
+                break;
+            }
+        }
+
+        self.tokens.remove_indices(to_remove);
+    }
+
+    /// Condenses "tl;dr" down to a single word token.
+    fn condense_tldr(&mut self) {
+        if self.tokens.len() < 3 {
+            return;
+        }
+
+        let mut to_remove = VecDeque::new();
+        let mut cursor = 2;
+
+        loop {
+            let tl = &self.tokens[cursor - 2];
+            let simicolon = &self.tokens[cursor - 1];
+            let dr = &self.tokens[cursor];
+
+            let is_tldr_chunk = tl.kind.is_word()
+                && tl.span.len() == 2
+                && tl
+                    .span
+                    .get_content(&self.source)
+                    .eq_ignore_ascii_case_chars(&['t', 'l'])
+                && simicolon.kind.is_semicolon()
+                && dr.kind.is_word()
+                && dr.span.len() >= 2
+                && dr.span.len() <= 3
+                && dr
+                    .span
+                    .get_content(&self.source)
+                    .eq_any_ignore_ascii_case_chars(&[&['d', 'r'], &['d', 'r', 's']]);
+
+            if is_tldr_chunk {
+                // Update the first token to be the full "tl;dr" as a word
+                self.tokens[cursor - 2].span = Span::new(
+                    self.tokens[cursor - 2].span.start,
+                    self.tokens[cursor].span.end,
+                );
+
+                // Mark the semicolon and "dr" tokens for removal
+                to_remove.push_back(cursor - 1);
+                to_remove.push_back(cursor);
+            }
+
+            // Skip ahead since we've processed these tokens
+            cursor += 1;
+
+            if cursor >= self.tokens.len() {
+                break;
+            }
+        }
+
+        // Remove the marked tokens in reverse order to maintain correct indices
+        self.tokens.remove_indices(to_remove);
+    }
+
+    /// Allows condensing of delimited pairs of tokens into a single token.
+    ///
+    /// # Arguments
+    ///
+    /// * `is_delimiter` - A function that returns `true` if the token is a delimiter.
+    /// * `valid_pairs` - A slice of tuples representing the valid pairs of tokens to condense.
+    ///
+    fn condense_delimited_pairs<F>(&mut self, is_delimiter: F, valid_pairs: &[(char, char)])
+    where
+        F: Fn(&TokenKind) -> bool,
+    {
+        if self.tokens.len() < 3 {
+            return;
+        }
+
+        let mut to_remove = VecDeque::new();
+        let mut cursor = 2;
+
+        loop {
+            let l1 = &self.tokens[cursor - 2];
+            let delim = &self.tokens[cursor - 1];
+            let l2 = &self.tokens[cursor];
+
+            let is_delimited_chunk = l1.kind.is_word()
+                && l1.span.len() == 1
+                && is_delimiter(&delim.kind)
+                && l2.kind.is_word()
+                && l2.span.len() == 1;
+
+            if is_delimited_chunk {
+                let (l1, l2) = (
+                    l1.span.get_content(&self.source).first(),
+                    l2.span.get_content(&self.source).first(),
+                );
+
+                let is_valid_pair = match (l1, l2) {
+                    (Some(l1), Some(l2)) => {
+                        let pair = (l1.to_ascii_lowercase(), l2.to_ascii_lowercase());
+                        valid_pairs.contains(&pair)
+                    }
+                    _ => false,
+                };
+
+                if is_valid_pair {
+                    self.tokens[cursor - 2].span = Span::new(
+                        self.tokens[cursor - 2].span.start,
+                        self.tokens[cursor].span.end,
+                    );
+                    to_remove.push_back(cursor - 1);
+                    to_remove.push_back(cursor);
+                }
+            }
+
+            cursor += 1;
+            if cursor >= self.tokens.len() {
+                break;
+            }
+        }
+
+        self.tokens.remove_indices(to_remove);
+    }
+
+    // Condenses "ampersand pairs" such as "R&D" or "Q&A" into single tokens.
+    fn condense_ampersand_pairs(&mut self) {
+        self.condense_delimited_pairs(
+            |kind| kind.is_ampersand(),
+            &[
+                ('b', 'b'), // bed & breakfast
+                ('b', 'w'), // black & white
+                ('g', 't'), // gin & tonic
+                ('k', 'r'), // Kernighan & Ritchie
+                ('q', 'a'), // question & answer
+                ('r', 'b'), // rhythm & blues
+                ('r', 'd'), // research & development
+                ('r', 'r'), // rest & relaxation
+                ('s', 'p'), // Standard & Poor's
+            ],
+        );
+    }
+
+    // Condenses "slash pairs" such as "I/O" into single tokens.
+    fn condense_slash_pairs(&mut self) {
+        self.condense_delimited_pairs(
+            |kind| kind.is_slash(),
+            &[
+                ('a', 'c'), // aircon; alternating current
+                ('b', 'w'), // black and white
+                ('c', 'o'), // care of
+                ('d', 'c'), // direct current
+                ('d', 'l'), // download
+                ('i', 'o'), // input/output
+                ('j', 'k'), // just kidding
+                ('n', 'a'), // not applicable
+                ('r', 'c'), // radio control
+                ('s', 'n'), // serial number
+                ('y', 'n'), // yes/no
+                ('y', 'o'), // years old
+            ],
+        );
+    }
+
     fn uncached_ellipsis_pattern() -> Lrc<Repeating> {
         let period = SequenceExpr::default().then_period();
         Lrc::new(Repeating::new(Box::new(period), 2))
@@ -599,7 +820,7 @@ impl Document {
     fn condense_contractions(&mut self) {
         let expr = Self::CONTRACTION_EXPR.with(|v| v.clone());
 
-        self.condense_expr(&expr, |_| {});
+        self.condense_expr(&expr, |_| {})
     }
 }
 
@@ -663,7 +884,7 @@ impl TokenStringExt for Document {
         self.tokens.first_non_whitespace()
     }
 
-    fn span(&self) -> Option<Span> {
+    fn span(&self) -> Option<Span<char>> {
         self.tokens.span()
     }
 
@@ -685,6 +906,10 @@ impl TokenStringExt for Document {
 
     fn iter_sentences(&self) -> impl Iterator<Item = &'_ [Token]> + '_ {
         self.tokens.iter_sentences()
+    }
+
+    fn iter_sentences_mut(&mut self) -> impl Iterator<Item = &'_ mut [Token]> + '_ {
+        self.tokens.iter_sentences_mut()
     }
 }
 
@@ -872,5 +1097,164 @@ mod tests {
         let tok = doc.get_next_word_from_offset(0, 1);
 
         assert!(tok.is_none());
+    }
+
+    #[test]
+    fn condenses_filename_extensions() {
+        let doc = Document::new_plain_english_curated(".c and .exe and .js");
+        assert!(doc.tokens[0].kind.is_unlintable());
+        assert!(doc.tokens[4].kind.is_unlintable());
+        assert!(doc.tokens[8].kind.is_unlintable());
+    }
+
+    #[test]
+    fn condense_filename_extension_ok_at_start_and_end() {
+        let doc = Document::new_plain_english_curated(".c and .EXE");
+        assert!(doc.tokens.len() == 5);
+        assert!(doc.tokens[0].kind.is_unlintable());
+        assert!(doc.tokens[4].kind.is_unlintable());
+    }
+
+    #[test]
+    fn doesnt_condense_filename_extensions_with_mixed_case() {
+        let doc = Document::new_plain_english_curated(".c and .Exe");
+        assert!(doc.tokens.len() == 6);
+        assert!(doc.tokens[0].kind.is_unlintable());
+        assert!(doc.tokens[4].kind.is_punctuation());
+        assert!(doc.tokens[5].kind.is_word());
+    }
+
+    #[test]
+    fn doesnt_condense_filename_extensions_with_non_letters() {
+        let doc = Document::new_plain_english_curated(".COM and .C0M");
+        assert!(doc.tokens.len() == 6);
+        assert!(doc.tokens[0].kind.is_unlintable());
+        assert!(doc.tokens[4].kind.is_punctuation());
+        assert!(doc.tokens[5].kind.is_word());
+    }
+
+    #[test]
+    fn doesnt_condense_filename_extensions_longer_than_three() {
+        let doc = Document::new_plain_english_curated(".dll and .dlls");
+        assert!(doc.tokens.len() == 6);
+        assert!(doc.tokens[0].kind.is_unlintable());
+        assert!(doc.tokens[4].kind.is_punctuation());
+        assert!(doc.tokens[5].kind.is_word());
+    }
+
+    #[test]
+    fn condense_filename_extension_in_parens() {
+        let doc = Document::new_plain_english_curated(
+            "true for the manual installation when trying to run the executable(.exe) after a manual download",
+        );
+        assert!(doc.tokens.len() > 23);
+        assert!(doc.tokens[21].kind.is_open_round());
+        assert!(doc.tokens[22].kind.is_unlintable());
+        assert!(doc.tokens[23].kind.is_close_round());
+    }
+
+    #[test]
+    fn condense_tldr_uppercase() {
+        let doc = Document::new_plain_english_curated("TL;DR");
+        assert!(doc.tokens.len() == 1);
+        assert!(doc.tokens[0].kind.is_word());
+        assert!(doc.tokens[0].span.len() == 5);
+    }
+
+    #[test]
+    fn condense_tldr_lowercase() {
+        let doc = Document::new_plain_english_curated("tl;dr");
+        assert!(doc.tokens.len() == 1);
+        assert!(doc.tokens[0].kind.is_word());
+    }
+
+    #[test]
+    fn condense_tldr_mixed_case_1() {
+        let doc = Document::new_plain_english_curated("tl;DR");
+        assert!(doc.tokens.len() == 1);
+        assert!(doc.tokens[0].kind.is_word());
+    }
+
+    #[test]
+    fn condense_tldr_mixed_case_2() {
+        let doc = Document::new_plain_english_curated("TL;Dr");
+        assert!(doc.tokens.len() == 1);
+        assert!(doc.tokens[0].kind.is_word());
+    }
+
+    #[test]
+    fn condense_tldr_pural() {
+        let doc = Document::new_plain_english_curated(
+            "managing the flow between components to produce relevant TL;DRs of current news articles",
+        );
+        // no token is a punctuation token - only words with whitespace between
+        assert!(
+            doc.tokens
+                .iter()
+                .all(|t| t.kind.is_word() || t.kind.is_whitespace())
+        );
+        // one of the word tokens contains a ';' character
+        let tldrs = doc
+            .tokens
+            .iter()
+            .filter(|t| t.span.get_content(&doc.source).contains(&';'))
+            .collect_vec();
+        assert!(tldrs.len() == 1);
+        assert!(tldrs[0].span.get_content_string(&doc.source) == "TL;DRs");
+    }
+
+    #[test]
+    fn condense_r_and_d_caps() {
+        let doc = Document::new_plain_english_curated("R&D");
+        assert!(doc.tokens.len() == 1);
+        assert!(doc.tokens[0].kind.is_word());
+    }
+
+    #[test]
+    fn condense_r_and_d_mixed_case() {
+        let doc = Document::new_plain_english_curated("R&d");
+        assert!(doc.tokens.len() == 1);
+        assert!(doc.tokens[0].kind.is_word());
+    }
+
+    #[test]
+    fn condense_r_and_d_lowercase() {
+        let doc = Document::new_plain_english_curated("r&d");
+        assert!(doc.tokens.len() == 1);
+        assert!(doc.tokens[0].kind.is_word());
+    }
+
+    #[test]
+    fn dont_condense_r_and_d_with_spaces() {
+        let doc = Document::new_plain_english_curated("R & D");
+        assert!(doc.tokens.len() == 5);
+        assert!(doc.tokens[0].kind.is_word());
+        assert!(doc.tokens[1].kind.is_whitespace());
+        assert!(doc.tokens[2].kind.is_ampersand());
+        assert!(doc.tokens[3].kind.is_whitespace());
+        assert!(doc.tokens[4].kind.is_word());
+    }
+
+    #[test]
+    fn condense_q_and_a() {
+        let doc =
+            Document::new_plain_english_curated("A Q&A platform software for teams at any scales.");
+        assert!(doc.tokens.len() >= 3);
+        assert!(doc.tokens[2].kind.is_word());
+        assert!(doc.tokens[2].span.get_content_string(&doc.source) == "Q&A");
+    }
+
+    #[test]
+    fn dont_allow_mixed_r_and_d_with_q_and_a() {
+        let doc = Document::new_plain_english_curated("R&A or Q&D");
+        assert!(doc.tokens.len() == 9);
+        assert!(doc.tokens[1].kind.is_ampersand() || doc.tokens[7].kind.is_ampersand());
+    }
+
+    #[test]
+    fn condense_io() {
+        let doc = Document::new_plain_english_curated("I/O");
+        assert!(doc.tokens.len() == 1);
+        assert!(doc.tokens[0].kind.is_word());
     }
 }

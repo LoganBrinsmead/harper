@@ -33,7 +33,7 @@ impl SimilarToPhrase {
 
         for token in document.fat_tokens() {
             match token.kind {
-                TokenKind::Word(_word_metadata) => {
+                TokenKind::Word(_lexeme_metadata) => {
                     phrase = phrase.then(Word::from_chars(token.content.as_slice()));
                     fuzzy_phrase = fuzzy_phrase
                         .then(WithinEditDistance::new(token.content.into(), max_edit_dist));
@@ -58,7 +58,7 @@ impl SimilarToPhrase {
 }
 
 impl Expr for SimilarToPhrase {
-    fn run(&self, cursor: usize, tokens: &[Token], source: &[char]) -> Option<Span> {
+    fn run(&self, cursor: usize, tokens: &[Token], source: &[char]) -> Option<Span<Token>> {
         if self.phrase.run(cursor, tokens, source).is_some() {
             return None;
         }

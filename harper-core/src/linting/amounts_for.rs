@@ -1,8 +1,8 @@
 use crate::expr::Expr;
+use crate::expr::FirstMatchOf;
 use crate::expr::FixedPhrase;
-use crate::expr::LongestMatchOf;
 use crate::expr::SequenceExpr;
-use crate::{Lrc, Token, TokenStringExt, patterns::WordSet};
+use crate::{Token, TokenStringExt, patterns::WordSet};
 
 use super::{ExprLinter, Lint, LintKind, Suggestion};
 
@@ -17,7 +17,7 @@ impl Default for AmountsFor {
         let singular_pattern = SequenceExpr::default()
             .then(singular_context)
             .then_whitespace()
-            .then(Lrc::new(FixedPhrase::from_phrase("amounts for")));
+            .then(FixedPhrase::from_phrase("amounts for"));
 
         let singular_context = WordSet::new(&[
             "they", "can", "could", "may", "might", "must", "should", "will", "would",
@@ -26,10 +26,10 @@ impl Default for AmountsFor {
         let plural_pattern = SequenceExpr::default()
             .then(singular_context)
             .then_whitespace()
-            .then(Lrc::new(FixedPhrase::from_phrase("amount for")));
+            .then(FixedPhrase::from_phrase("amount for"));
 
         Self {
-            expr: Box::new(LongestMatchOf::new(vec![
+            expr: Box::new(FirstMatchOf::new(vec![
                 Box::new(singular_pattern),
                 Box::new(plural_pattern),
             ])),
@@ -47,8 +47,6 @@ impl ExprLinter for AmountsFor {
 
         if content.ends_with("amounts for") {
             let span = toks[2..5].span()?;
-
-            eprintln!("span: '{}'", span.get_content_string(src));
 
             return Some(Lint {
                 span,

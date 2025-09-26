@@ -35,12 +35,12 @@ describe('Integration >', () => {
 			await waitForDiagnosticsChange(markdownUri),
 			createExpectedDiagnostics(
 				{
-					message: 'Did you mean to repeat this word?',
-					range: createRange(2, 39, 2, 48),
-				},
-				{
 					message: 'Did you mean to spell `errorz` this way?',
 					range: createRange(2, 26, 2, 32),
+				},
+				{
+					message: 'Did you mean to repeat this word?',
+					range: createRange(2, 39, 2, 48),
 				},
 				{
 					message: 'Did you mean to spell `realise` this way?',
@@ -131,12 +131,12 @@ describe('Integration >', () => {
 			),
 			createExpectedDiagnostics(
 				{
-					message: 'Did you mean to repeat this word?',
-					range: createRange(2, 39, 2, 48),
-				},
-				{
 					message: 'Did you mean to spell `errorz` this way?',
 					range: createRange(2, 26, 2, 32),
+				},
+				{
+					message: 'Did you mean to repeat this word?',
+					range: createRange(2, 39, 2, 48),
 				},
 			),
 		);
@@ -146,6 +146,32 @@ describe('Integration >', () => {
 			markdownUri,
 			async () => await config.update('dialect', 'American', ConfigurationTarget.Workspace),
 		);
+	});
+
+	it('excludes Markdown files when excludePatterns include *.md', async () => {
+		const config = workspace.getConfiguration('harper');
+
+		compareActualVsExpectedDiagnostics(
+			await waitForDiagnosticsChange(markdownUri, async () => {
+				await config.update('excludePatterns', ['*.md'], ConfigurationTarget.Workspace);
+			}),
+			createExpectedDiagnostics(),
+		);
+
+		await waitForDiagnosticsChange(markdownUri, async () => {
+			// Set config back to default value
+			await config.update('excludePatterns', [], ConfigurationTarget.Workspace);
+
+			// Ideally, we can just execute `workbench.action.closeActiveEditor` then
+			// `workbench.action.reopenClosedEditor` here and the diagnostics should reset since that
+			// works when done manually as that triggers `textDocument/didOpen`, but when done automated,
+			// it won't work. So, we delete, restore, then reopen the file instead.
+			const markdownContent = await workspace.fs.readFile(markdownUri);
+			await commands.executeCommand('workbench.files.action.showActiveFileInExplorer');
+			await commands.executeCommand('deleteFile');
+			await workspace.fs.writeFile(markdownUri, markdownContent);
+			await openUri(markdownUri);
+		});
 	});
 
 	it('updates diagnostics when files are deleted', async () => {

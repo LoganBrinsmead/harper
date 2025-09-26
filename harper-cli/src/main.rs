@@ -1,5 +1,6 @@
 #![doc = include_str!("../README.md")]
 
+use harper_core::spell::{Dictionary, FstDictionary, MergedDictionary, MutableDictionary, WordId};
 use hashbrown::HashMap;
 use std::collections::BTreeMap;
 use std::fs::File;
@@ -16,16 +17,22 @@ use harper_comments::CommentParser;
 use harper_core::linting::{LintGroup, Linter};
 use harper_core::parsers::{Markdown, MarkdownOptions, OrgMode, PlainEnglish};
 use harper_core::{
-    CharStringExt, Dialect, Dictionary, Document, FstDictionary, MergedDictionary,
-    MutableDictionary, TokenKind, TokenStringExt, WordId, WordMetadata, remove_overlaps,
+    CharStringExt, Dialect, DictWordMetadata, Document, Span, TokenKind, TokenStringExt,
+    dict_word_metadata_orthography::OrthFlags, remove_overlaps,
 };
+use harper_ink::InkParser;
 use harper_literate_haskell::LiterateHaskellParser;
-use harper_pos_utils::{BrillChunker, BrillTagger};
+#[cfg(feature = "training")]
+use harper_pos_utils::{BrillChunker, BrillTagger, BurnChunkerCpu};
+
 use harper_stats::Stats;
 use serde::Serialize;
 
 mod input;
 use input::Input;
+
+mod annotate_tokens;
+use annotate_tokens::{Annotation, AnnotationType};
 
 /// A debugging tool for the Harper grammar checker.
 #[derive(Debug, Parser)]
@@ -42,8 +49,12 @@ enum Args {
         count: bool,
         /// Restrict linting to only a specific set of rules.
         /// If omitted, `harper-cli` will run every rule.
-        #[arg(short, long, value_delimiter = ',')]
-        only_lint_with: Option<Vec<String>>,
+        #[arg(long, value_delimiter = ',')]
+        ignore: Option<Vec<String>>,
+        /// Restrict linting to only a specific set of rules.
+        /// If omitted, `harper-cli` will run every rule.
+        #[arg(long, value_delimiter = ',')]
+        only: Option<Vec<String>>,
         /// Specify the dialect.
         #[arg(short, long, default_value = Dialect::American.to_string())]
         dialect: Dialect,
@@ -69,8 +80,17 @@ enum Args {
         #[arg(short, long)]
         include_newlines: bool,
     },
-    /// Get the metadata associated with a particular word.
-    Metadata { word: String },
+    /// Parse a provided document and annotate its tokens.
+    AnnotateTokens {
+        /// The text or file you wish to parse. If not provided, it will be read from standard
+        /// input.
+        input: Option<Input>,
+        /// How the tokens should be annotated.
+        #[arg(short, long, value_enum, default_value_t = AnnotationType::Upos)]
+        annotation_type: AnnotationType,
+    },
+    /// Get the metadata associated with one or more words.
+    Metadata { words: Vec<String> },
     /// Get all the forms of a word using the affixes.
     Forms { line: String },
     /// Emit a decompressed, line-separated list of the words in Harper's dictionary.
@@ -84,6 +104,7 @@ enum Args {
         /// The document to mine words from.
         file: PathBuf,
     },
+    #[cfg(feature = "training")]
     TrainBrillTagger {
         #[arg(short, long, default_value = "1.0")]
         candidate_selection_chance: f32,
@@ -95,6 +116,7 @@ enum Args {
         #[arg(num_args = 1..)]
         datasets: Vec<PathBuf>,
     },
+    #[cfg(feature = "training")]
     TrainBrillChunker {
         #[arg(short, long, default_value = "1.0")]
         candidate_selection_chance: f32,
@@ -103,6 +125,27 @@ enum Args {
         /// The number of epochs (and patch rules) to train.
         epochs: usize,
         /// Path to a `.conllu` dataset to train on.
+        #[arg(num_args = 1..)]
+        datasets: Vec<PathBuf>,
+    },
+    #[cfg(feature = "training")]
+    TrainBurnChunker {
+        #[arg(short, long)]
+        lr: f64,
+        // The number of embedding dimensions
+        #[arg(long)]
+        dim: usize,
+        /// The path to write the final  model file to.
+        #[arg(short, long)]
+        output: PathBuf,
+        /// The number of epochs to train.
+        #[arg(short, long)]
+        epochs: usize,
+        /// The dropout probability
+        #[arg(long)]
+        dropout: f32,
+        #[arg(short, long)]
+        test_file: PathBuf,
         #[arg(num_args = 1..)]
         datasets: Vec<PathBuf>,
     },
@@ -120,8 +163,14 @@ enum Args {
     /// Emit a decompressed, line-separated list of the compounds in Harper's dictionary.
     /// As long as there's either an open or hyphenated spelling.
     Compounds,
-    /// Provided a sentence or phrase, emit a list of each noun phrase contained within.
-    NominalPhrases { input: String },
+    /// Emit a decompressed, line-separated list of the words in Harper's dictionary
+    /// which occur in more than one lettercase variant.    
+    CaseVariants,
+    /// Emit a list of each noun phrase contained within the input
+    NominalPhrases {
+        /// The text or file to analyze. If not provided, it will be read from standard input.
+        input: Option<Input>,
+    },
 }
 
 fn main() -> anyhow::Result<()> {
@@ -133,7 +182,8 @@ fn main() -> anyhow::Result<()> {
         Args::Lint {
             input,
             count,
-            only_lint_with,
+            ignore,
+            only,
             dialect,
             user_dict_path,
             file_dict_path,
@@ -164,11 +214,17 @@ fn main() -> anyhow::Result<()> {
 
             let mut linter = LintGroup::new_curated(Arc::new(merged_dict), dialect);
 
-            if let Some(rules) = only_lint_with {
+            if let Some(rules) = only {
                 linter.set_all_rules_to(Some(false));
 
                 for rule in rules {
                     linter.config.set_rule_enabled(rule, true);
+                }
+            }
+
+            if let Some(rules) = ignore {
+                for rule in rules {
+                    linter.config.set_rule_enabled(rule, false);
                 }
             }
 
@@ -268,6 +324,35 @@ fn main() -> anyhow::Result<()> {
 
             Ok(())
         }
+        Args::AnnotateTokens {
+            input,
+            annotation_type,
+        } => {
+            // Try to read from standard input if `input` was not provided.
+            let input = input.unwrap_or_else(|| Input::try_from_stdin().unwrap());
+
+            // Load the file/text.
+            let (doc, source) = input.load(markdown_options, &dictionary)?;
+
+            let input_identifier = input.get_identifier();
+
+            let mut report_builder = Report::build(
+                ReportKind::Custom("AnnotateTokens", Color::Blue),
+                &*input_identifier,
+                0,
+            );
+
+            report_builder = report_builder.with_labels(Annotation::iter_labels_from_document(
+                annotation_type,
+                &doc,
+                &input_identifier,
+            ));
+
+            let report = report_builder.finish();
+            report.print((&*input_identifier, Source::from(source)))?;
+
+            Ok(())
+        }
         Args::Words => {
             let mut word_str = String::new();
 
@@ -280,12 +365,14 @@ fn main() -> anyhow::Result<()> {
 
             Ok(())
         }
-        Args::Metadata { word } => {
-            let metadata = dictionary.get_word_metadata_str(&word);
-            let json = serde_json::to_string_pretty(&metadata).unwrap();
-
+        Args::Metadata { words } => {
+            let mut results = BTreeMap::new();
+            for word in words {
+                let metadata = dictionary.get_lexeme_metadata_str(&word);
+                results.insert(word, metadata);
+            }
+            let json = serde_json::to_string_pretty(&results).unwrap();
             println!("{json}");
-
             Ok(())
         }
         Args::SummarizeLintRecord { file } => {
@@ -352,7 +439,7 @@ fn main() -> anyhow::Result<()> {
                 let rune_words = format!("1\n{line}");
                 let dict = MutableDictionary::from_rune_files(
                     &rune_words,
-                    include_str!("../../harper-core/affixes.json"),
+                    include_str!("../../harper-core/annotations.json"),
                 )?;
 
                 println!("New, from you:");
@@ -420,6 +507,7 @@ fn main() -> anyhow::Result<()> {
             println!("harper-core v{}", harper_core::core_version());
             Ok(())
         }
+        #[cfg(feature = "training")]
         Args::TrainBrillTagger {
             datasets: dataset,
             epochs,
@@ -431,6 +519,7 @@ fn main() -> anyhow::Result<()> {
 
             Ok(())
         }
+        #[cfg(feature = "training")]
         Args::TrainBrillChunker {
             datasets,
             epochs,
@@ -441,11 +530,27 @@ fn main() -> anyhow::Result<()> {
             fs::write(output, serde_json::to_string_pretty(&chunker)?)?;
             Ok(())
         }
+        #[cfg(feature = "training")]
+        Args::TrainBurnChunker {
+            datasets,
+            test_file,
+            epochs,
+            dropout,
+            output,
+            lr,
+            dim: embed_dim,
+        } => {
+            let chunker =
+                BurnChunkerCpu::train_cpu(&datasets, &test_file, embed_dim, dropout, epochs, lr);
+            chunker.save_to(output);
+
+            Ok(())
+        }
         Args::RenameFlag { old, new, dir } => {
             use serde_json::Value;
 
             let dict_path = dir.join("dictionary.dict");
-            let affixes_path = dir.join("affixes.json");
+            let affixes_path = dir.join("annotations.json");
 
             // Validate old and new flags are exactly one Unicode code point (Rust char)
             // And not characters used for the dictionary format
@@ -467,27 +572,27 @@ fn main() -> anyhow::Result<()> {
 
             // Load and parse affixes
             let affixes_string = fs::read_to_string(&affixes_path)
-                .map_err(|e| anyhow!("Failed to read affixes.json: {e}"))?;
+                .map_err(|e| anyhow!("Failed to read annotations.json: {e}"))?;
 
             let affixes_json: Value = serde_json::from_str(&affixes_string)
-                .map_err(|e| anyhow!("Failed to parse affixes.json: {e}"))?;
+                .map_err(|e| anyhow!("Failed to parse annotations.json: {e}"))?;
 
             // Get the nested "affixes" object
             let affixes_obj = &affixes_json
                 .get("affixes")
                 .and_then(Value::as_object)
-                .ok_or_else(|| anyhow!("affixes.json does not contain 'affixes' object"))?;
+                .ok_or_else(|| anyhow!("annotations.json does not contain 'affixes' object"))?;
 
             let properties_obj = &affixes_json
                 .get("properties")
                 .and_then(Value::as_object)
-                .ok_or_else(|| anyhow!("affixes.json does not contain 'properties' object"))?;
+                .ok_or_else(|| anyhow!("annotations.json does not contain 'properties' object"))?;
 
             // Validate old flag exists and get its description
             let old_entry = affixes_obj
                 .get(&old)
                 .or_else(|| properties_obj.get(&old))
-                .ok_or_else(|| anyhow!("Flag '{old}' not found in affixes.json"))?;
+                .ok_or_else(|| anyhow!("Flag '{old}' not found in annotations.json"))?;
 
             let description = old_entry
                 .get("#")
@@ -548,7 +653,7 @@ fn main() -> anyhow::Result<()> {
 
             // Verify that the updated affixes string is valid JSON
             serde_json::from_str::<Value>(&updated_affixes_string)
-                .map_err(|e| anyhow!("Failed to parse updated affixes.json: {e}"))?;
+                .map_err(|e| anyhow!("Failed to parse updated annotations.json: {e}"))?;
 
             // Write changes
             fs::write(&dict_path, updated_dict)
@@ -614,15 +719,88 @@ fn main() -> anyhow::Result<()> {
             println!("\nFound {} compound word groups", results.len());
             Ok(())
         }
-        Args::NominalPhrases { input } => {
-            let doc = Document::new_markdown_default_curated(&input);
+        Args::CaseVariants => {
+            let case_bitmask = OrthFlags::LOWERCASE
+                | OrthFlags::TITLECASE
+                | OrthFlags::ALLCAPS
+                | OrthFlags::LOWER_CAMEL
+                | OrthFlags::UPPER_CAMEL;
+            let mut processed_words = HashMap::new();
+            let mut longest_word = 0;
+            for word in dictionary.words_iter() {
+                if let Some(metadata) = dictionary.get_lexeme_metadata(word) {
+                    let orth = metadata.orth_info;
+                    let bits = orth.bits() & case_bitmask.bits();
 
-            for phrase in doc.iter_nominal_phrases() {
-                let s =
-                    doc.get_span_content_str(&phrase.span().ok_or(anyhow!("Unable to get span"))?);
-
-                println!("{s}");
+                    if bits.count_ones() > 1 {
+                        longest_word = longest_word.max(word.len());
+                        // Mask out all bits except the case-related ones before printing
+                        processed_words.insert(
+                            word.to_string(),
+                            OrthFlags::from_bits_truncate(orth.bits() & case_bitmask.bits()),
+                        );
+                    }
+                }
             }
+            let mut processed_words: Vec<_> = processed_words.into_iter().collect();
+            processed_words.sort_by_key(|(word, _)| word.clone());
+            let longest_num = (processed_words.len() - 1).to_string().len();
+            for (i, (word, orth)) in processed_words.iter().enumerate() {
+                println!("{i:>longest_num$} {word:<longest_word$} : {orth:?}");
+            }
+            Ok(())
+        }
+        Args::NominalPhrases { input } => {
+            // Get input from either file or direct text
+            let input = match input {
+                Some(Input::File(path)) => std::fs::read_to_string(path)?,
+                Some(Input::Text(text)) => text,
+                None => std::io::read_to_string(std::io::stdin())?,
+            };
+
+            let doc = Document::new_markdown_default_curated(&input);
+            let phrases: Vec<_> = doc
+                .iter_nominal_phrases()
+                .map(|toks| {
+                    (
+                        toks.first().unwrap().span.start,
+                        toks.last().unwrap().span.end,
+                    )
+                })
+                .collect();
+
+            let mut last_end = 0;
+
+            for (start, end) in phrases {
+                // Plain text between nominal phrases
+                if start > last_end {
+                    let span = Span::new(last_end, start);
+                    let txt = doc.get_span_content_str(&span);
+                    if !txt.trim().is_empty() {
+                        print!("{}", txt);
+                    }
+                }
+
+                // Highlighted nominal phrase
+                let span = Span::new(start, end);
+                let txt = doc.get_span_content_str(&span);
+
+                print!("\x1b[33m{}\x1b[0m", txt);
+
+                last_end = end;
+            }
+
+            // Plain text after the last nominal phrase, if any
+            let doc_len = doc.get_full_content().len();
+            if last_end < doc_len {
+                let span = Span::new(last_end, doc_len);
+                let txt = doc.get_span_content_str(&span);
+                if !txt.trim().is_empty() {
+                    print!("{}", txt);
+                }
+            }
+
+            println!();
 
             Ok(())
         }
@@ -641,6 +819,7 @@ fn load_file(
         .map(|v| v.to_str().unwrap())
     {
         Some("md") => Box::new(Markdown::default()),
+        Some("ink") => Box::new(InkParser::default()),
 
         Some("lhs") => Box::new(LiterateHaskellParser::new_markdown(
             MarkdownOptions::default(),
@@ -678,7 +857,7 @@ fn print_word_derivations(word: &str, annot: &str, dictionary: &impl Dictionary)
 
     let children = dictionary
         .words_iter()
-        .filter(|e| dictionary.get_word_metadata(e).unwrap().derived_from == Some(id));
+        .filter(|e| dictionary.get_lexeme_metadata(e).unwrap().derived_from == Some(id));
 
     println!(" - {word}");
 
@@ -695,7 +874,7 @@ fn load_dict(path: &Path) -> anyhow::Result<MutableDictionary> {
     let mut dict = MutableDictionary::new();
     dict.extend_words(
         str.lines()
-            .map(|l| (l.chars().collect::<Vec<_>>(), WordMetadata::default())),
+            .map(|l| (l.chars().collect::<Vec<_>>(), DictWordMetadata::default())),
     );
 
     Ok(dict)

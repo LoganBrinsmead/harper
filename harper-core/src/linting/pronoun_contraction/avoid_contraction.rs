@@ -1,6 +1,5 @@
-use crate::Token;
-use crate::expr::Expr;
-use crate::expr::SequenceExpr;
+use crate::expr::{Expr, SequenceExpr};
+use crate::{Token, TokenKind};
 
 use super::super::{ExprLinter, Lint, LintKind, Suggestion};
 
@@ -10,12 +9,9 @@ pub struct AvoidContraction {
 
 impl Default for AvoidContraction {
     fn default() -> Self {
-        let pattern =
-            SequenceExpr::aco("you're")
-                .then_whitespace()
-                .then(|tok: &Token, _source: &[char]| {
-                    tok.kind.is_nominal() && !tok.kind.is_likely_homograph()
-                });
+        let pattern = SequenceExpr::aco("you're")
+            .then_whitespace()
+            .then_kind_is_but_is_not(TokenKind::is_nominal, TokenKind::is_likely_homograph);
 
         Self {
             expr: Box::new(pattern),

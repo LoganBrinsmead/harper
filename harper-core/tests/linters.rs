@@ -9,8 +9,9 @@
 //! Note: This test will fail if the snapshot files are not up to date. This
 //! ensures that CI will fail if linters change their behavior.
 
+use harper_core::spell::FstDictionary;
 use harper_core::{
-    Dialect, Document, FstDictionary,
+    Dialect, Document,
     linting::{LintGroup, Linter},
 };
 
@@ -28,7 +29,7 @@ struct Lines<'a> {
     offsets: Vec<usize>,
 }
 impl Lines<'_> {
-    fn new(source: &str) -> Lines {
+    fn new(source: &'_ str) -> Lines<'_> {
         let lines: Vec<&str> = source.split('\n').collect();
         let offsets: Vec<usize> = lines
             .iter()

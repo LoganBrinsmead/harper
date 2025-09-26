@@ -1,8 +1,6 @@
 import type { ExtensionContext } from 'vscode';
+import { commands, StatusBarAlignment, type StatusBarItem, Uri, window, workspace } from 'vscode';
 import type { Executable, LanguageClientOptions } from 'vscode-languageclient/node';
-
-import { Uri, commands, window, workspace } from 'vscode';
-import { StatusBarAlignment, type StatusBarItem } from 'vscode';
 import { LanguageClient, ResponseError, TransportKind } from 'vscode-languageclient/node';
 
 // There's no publicly available extension manifest type except for the internal one from VS Code's
@@ -30,7 +28,12 @@ const clientOptions: LanguageClientOptions = {
 		},
 		executeCommand(command, args, next) {
 			if (
-				['HarperAddToUserDict', 'HarperAddToFileDict', 'HarperIgnoreLint'].includes(command) &&
+				[
+					'HarperAddToUserDict',
+					'HarperAddToWSDict',
+					'HarperAddToFileDict',
+					'HarperIgnoreLint',
+				].includes(command) &&
 				args.find((a) => typeof a === 'string' && a.startsWith('untitled:'))
 			) {
 				window

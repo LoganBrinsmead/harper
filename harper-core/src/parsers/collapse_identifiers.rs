@@ -5,7 +5,8 @@ use itertools::Itertools;
 
 use super::Parser;
 use crate::expr::{ExprExt, SequenceExpr};
-use crate::{Dictionary, Lrc, Span, Token, TokenKind, VecExt};
+use crate::spell::Dictionary;
+use crate::{Lrc, Span, Token, TokenKind, VecExt};
 
 /// A parser that wraps any other parser to collapse token strings that match
 /// the pattern `word_word` or `word-word`.
@@ -60,12 +61,12 @@ impl Parser for CollapseIdentifiers {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::spell::{FstDictionary, MergedDictionary, MutableDictionary};
     use crate::{
-        FstDictionary, MergedDictionary, MutableDictionary, WordMetadata,
+        DictWordMetadata,
         parsers::{PlainEnglish, StrParser},
     };
-
-    use super::*;
 
     #[test]
     fn matches_kebab() {
@@ -101,7 +102,7 @@ mod tests {
         assert_eq!(tokens.len(), 13);
 
         let mut dict = MutableDictionary::new();
-        dict.append_word_str("separated_identifier", WordMetadata::default());
+        dict.append_word_str("separated_identifier", DictWordMetadata::default());
 
         let mut merged_dict = MergedDictionary::new();
         merged_dict.add_dictionary(curated_dictionary);
@@ -125,7 +126,7 @@ mod tests {
         assert_eq!(tokens.len(), 13);
 
         let mut dict = MutableDictionary::new();
-        dict.append_word_str("separated-identifier", WordMetadata::default());
+        dict.append_word_str("separated-identifier", DictWordMetadata::default());
 
         let mut merged_dict = MergedDictionary::new();
         merged_dict.add_dictionary(curated_dictionary);
@@ -149,7 +150,7 @@ mod tests {
         assert_eq!(tokens.len(), 15);
 
         let mut dict = MutableDictionary::new();
-        dict.append_word_str("separated_identifier_token", WordMetadata::default());
+        dict.append_word_str("separated_identifier_token", DictWordMetadata::default());
 
         let mut merged_dict = MergedDictionary::new();
         merged_dict.add_dictionary(curated_dictionary);
@@ -172,7 +173,7 @@ mod tests {
         assert_eq!(tokens.len(), 17);
 
         let mut dict = MutableDictionary::new();
-        dict.append_word_str("separated_identifier", WordMetadata::default());
+        dict.append_word_str("separated_identifier", DictWordMetadata::default());
 
         let mut merged_dict = MergedDictionary::new();
         merged_dict.add_dictionary(curated_dictionary);
@@ -195,8 +196,8 @@ mod tests {
         assert_eq!(tokens.len(), 15);
 
         let mut dict = MutableDictionary::new();
-        dict.append_word_str("separated_identifier", WordMetadata::default());
-        dict.append_word_str("identifier_token", WordMetadata::default());
+        dict.append_word_str("separated_identifier", DictWordMetadata::default());
+        dict.append_word_str("identifier_token", DictWordMetadata::default());
 
         let mut merged_dict = MergedDictionary::new();
         merged_dict.add_dictionary(curated_dictionary);
@@ -219,8 +220,8 @@ mod tests {
         assert_eq!(tokens.len(), 15);
 
         let mut dict = MutableDictionary::new();
-        dict.append_word_str("separated_identifier_token", WordMetadata::default());
-        dict.append_word_str("separated_identifier", WordMetadata::default());
+        dict.append_word_str("separated_identifier_token", DictWordMetadata::default());
+        dict.append_word_str("separated_identifier", DictWordMetadata::default());
 
         let mut merged_dict = MergedDictionary::new();
         merged_dict.add_dictionary(curated_dictionary);

@@ -1,11 +1,12 @@
 use std::path::Path;
 
-use comment_parsers::{Go, JavaDoc, JsDoc, Solidity, Unit};
+use crate::comment_parsers;
+use comment_parsers::{Go, JavaDoc, JsDoc, Lua, Solidity, Unit};
+use harper_core::Token;
 use harper_core::parsers::{self, MarkdownOptions, Parser};
-use harper_core::{MutableDictionary, Token};
+use harper_core::spell::MutableDictionary;
 use tree_sitter::Node;
 
-use crate::comment_parsers;
 use crate::masker::CommentMasker;
 
 pub struct CommentParser {
@@ -46,11 +47,13 @@ impl CommentParser {
             "toml" => tree_sitter_toml_ng::LANGUAGE,
             "typescriptreact" => tree_sitter_typescript::LANGUAGE_TSX,
             "typescript" => tree_sitter_typescript::LANGUAGE_TYPESCRIPT,
+            "clojure" => tree_sitter_clojure::LANGUAGE,
             _ => return None,
         };
 
         let comment_parser: Box<dyn Parser> = match language_id {
             "go" => Box::new(Go::new_markdown(markdown_options)),
+            "lua" => Box::new(Lua::new_markdown(markdown_options)),
             "java" => Box::new(JavaDoc::default()),
             "javascriptreact" | "typescript" | "typescriptreact" | "javascript" => {
                 Box::new(JsDoc::new_markdown(markdown_options))
@@ -105,6 +108,7 @@ impl CommentParser {
             "toml" => "toml",
             "ts" => "typescript",
             "tsx" => "typescriptreact",
+            "clj" | "cljc" | "cljd" | "cljs" | "bb" => "clojure",
             _ => return None,
         })
     }

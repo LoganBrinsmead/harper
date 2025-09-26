@@ -1,5 +1,11 @@
 import { expect, test } from './fixtures';
-import { clickHarperHighlight, getProseMirrorEditor, replaceEditorContent } from './testUtils';
+import {
+	clickHarperHighlight,
+	getHarperHighlights,
+	getProseMirrorEditor,
+	randomString,
+	replaceEditorContent,
+} from './testUtils';
 
 const TEST_PAGE_URL = 'https://prosemirror.net/';
 
@@ -27,16 +33,18 @@ test('Can ignore suggestion.', async ({ page }) => {
 	await page.goto(TEST_PAGE_URL);
 	const pm = getProseMirrorEditor(page);
 
-	await replaceEditorContent(pm, 'This is an test.');
+	const cacheSalt = randomString(5);
+	await replaceEditorContent(pm, cacheSalt);
 
 	await page.waitForTimeout(3000);
 
-	await clickHarperHighlight(page);
+	const opened = await clickHarperHighlight(page);
+	expect(opened).toBe(true);
 	await page.getByTitle('Ignore this lint').click();
 
-	await page.waitForTimeout(3000);
+	await expect(getHarperHighlights(page)).toHaveCount(0);
 
 	// Nothing should change.
-	expect(pm).toContainText('This is an test');
+	expect(pm).toContainText(cacheSalt);
 	expect(await clickHarperHighlight(page)).toBe(false);
 });

@@ -4,6 +4,12 @@ use std::io::{BufWriter, Write};
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use crate::config::Config;
+use crate::dictionary_io::{load_dict, save_dict};
+use crate::document_state::DocumentState;
+use crate::git_commit_parser::GitCommitParser;
+use crate::ignored_lints_io::{load_ignored_lints, save_ignored_lints};
+use crate::io_utils::fileify_path;
 use anyhow::{Context, Result, anyhow};
 use futures::future::join;
 use harper_comments::CommentParser;
@@ -11,12 +17,12 @@ use harper_core::linting::{LintGroup, LintGroupConfig};
 use harper_core::parsers::{
     CollapseIdentifiers, IsolateEnglish, Markdown, OrgMode, Parser, PlainEnglish,
 };
-use harper_core::{
-    Dialect, Dictionary, Document, FstDictionary, IgnoredLints, MergedDictionary,
-    MutableDictionary, WordMetadata,
-};
+use harper_core::spell::{Dictionary, FstDictionary, MergedDictionary, MutableDictionary};
+use harper_core::{Dialect, DictWordMetadata, Document, IgnoredLints};
 use harper_html::HtmlParser;
+use harper_ink::InkParser;
 use harper_literate_haskell::LiterateHaskellParser;
+use harper_stats::{Record, Stats};
 use harper_typst::Typst;
 use serde_json::Value;
 use tokio::sync::{Mutex, RwLock};
@@ -35,14 +41,6 @@ use tower_lsp_server::lsp_types::{
 use tower_lsp_server::{Client, LanguageServer, UriExt};
 use tracing::{error, info, warn};
 
-use crate::config::Config;
-use crate::dictionary_io::{load_dict, save_dict};
-use crate::document_state::DocumentState;
-use crate::git_commit_parser::GitCommitParser;
-use crate::ignored_lints_io::{load_ignored_lints, save_ignored_lints};
-use crate::io_utils::fileify_path;
-use harper_stats::{Record, Stats};
-
 /// Return harper-ls version
 pub fn ls_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
@@ -50,6 +48,7 @@ pub fn ls_version() -> &'static str {
 
 pub struct Backend {
     client: Client,
+    root: RwLock<PathBuf>,
     config: RwLock<Config>,
     stats: RwLock<Stats>,
     doc_state: Mutex<HashMap<Uri, DocumentState>>,
@@ -59,6 +58,7 @@ impl Backend {
     pub fn new(client: Client, config: Config) -> Self {
         Self {
             client,
+            root: RwLock::new(".".into()),
             stats: RwLock::new(Stats::new()),
             config: RwLock::new(config),
             doc_state: Mutex::new(HashMap::new()),
@@ -80,7 +80,7 @@ impl Backend {
             .await
             .context("Unable to get the file path.")?;
 
-        load_dict(path)
+        load_dict(path, self.config.read().await.dialect)
             .await
             .map_err(|err| info!("{err}"))
             .or(Ok(MutableDictionary::new()))
@@ -144,7 +144,7 @@ impl Backend {
     async fn load_user_dictionary(&self) -> MutableDictionary {
         let config = self.config.read().await;
 
-        load_dict(&config.user_dict_path)
+        load_dict(&config.user_dict_path, self.config.read().await.dialect)
             .await
             .map_err(|err| info!("{err}"))
             .unwrap_or(MutableDictionary::new())
@@ -154,6 +154,24 @@ impl Backend {
         let config = self.config.read().await;
 
         save_dict(&config.user_dict_path, dict)
+            .await
+            .map_err(|err| anyhow!("Unable to save the dictionary to file: {err}"))
+    }
+
+    async fn load_workspace_dictionary(&self) -> MutableDictionary {
+        let config = self.config.read().await;
+        load_dict(
+            &config.workspace_dict_path,
+            self.config.read().await.dialect,
+        )
+        .await
+        .map_err(|err| info!("{err}"))
+        .unwrap_or(MutableDictionary::new())
+    }
+
+    async fn save_workspace_dictionary(&self, dict: impl Dictionary) -> Result<()> {
+        let config = self.config.read().await;
+        save_dict(&config.workspace_dict_path, dict)
             .await
             .map_err(|err| anyhow!("Unable to save the dictionary to file: {err}"))
     }
@@ -183,6 +201,8 @@ impl Backend {
         dict.add_dictionary(FstDictionary::curated());
         let user_dict = self.load_user_dictionary().await;
         dict.add_dictionary(Arc::new(user_dict));
+        let ws_dict = self.load_workspace_dictionary().await;
+        dict.add_dictionary(Arc::new(ws_dict));
         Ok(dict)
     }
 
@@ -193,7 +213,7 @@ impl Backend {
         );
 
         let mut global_dictionary =
-            global_dictionary.context("Unable to load the global dictionary.")?;
+            global_dictionary.context("Unable to load the user dictionary.")?;
         global_dictionary.add_dictionary(Arc::new(
             file_dictionary.context("Unable to load the file dictionary.")?,
         ));
@@ -221,7 +241,14 @@ impl Backend {
         self.pull_config().await;
 
         // Copy necessary configuration to avoid holding lock.
-        let (lint_config, markdown_options, isolate_english, dialect, max_file_length) = {
+        let (
+            lint_config,
+            markdown_options,
+            isolate_english,
+            dialect,
+            max_file_length,
+            exclude_patterns,
+        ) = {
             let config = self.config.read().await;
             (
                 config.lint_config.clone(),
@@ -229,17 +256,29 @@ impl Backend {
                 config.isolate_english,
                 config.dialect,
                 config.max_file_length,
+                config.exclude_patterns.clone(),
             )
         };
+
+        let mut doc_lock = self.doc_state.lock().await;
+
+        if !exclude_patterns.is_empty()
+            && exclude_patterns.is_match(
+                uri.to_file_path()
+                    .ok_or_else(|| anyhow!("Unable to convert URI to file path."))?,
+            )
+        {
+            doc_lock.remove(uri);
+            return Ok(());
+        }
+
+        let ignored_lints = self.load_ignored_lints(uri).await.unwrap_or_default();
 
         let dict = Arc::new(
             self.generate_file_dictionary(uri)
                 .await
                 .context("Unable to generate the file dictionary.")?,
         );
-
-        let mut doc_lock = self.doc_state.lock().await;
-        let ignored_lints = self.load_ignored_lints(uri).await.unwrap_or_default();
 
         let doc_state = doc_lock.entry(uri.clone()).or_insert_with(|| {
             info!("Constructing new LintGroup for new document.");
@@ -340,6 +379,7 @@ impl Backend {
                     Some(Box::new(parser))
                 }
             }
+            "ink" => Some(Box::new(InkParser::default())),
             "markdown" => Some(Box::new(Markdown::new(markdown_options))),
             "git-commit" | "gitcommit" => {
                 Some(Box::new(GitCommitParser::new_markdown(markdown_options)))
@@ -420,7 +460,9 @@ impl Backend {
     /// Update the configuration of the server and publish document updates that
     /// match it.
     async fn update_config_from_obj(&self, json_obj: Value) {
-        if let Ok(new_config) = Config::from_lsp_config(json_obj).map_err(|err| error!("{err}")) {
+        if let Ok(new_config) = Config::from_lsp_config(&self.root.read().await, json_obj)
+            .map_err(|err| error!("{err}"))
+        {
             let mut config = self.config.write().await;
             *config = new_config;
         }
@@ -443,7 +485,29 @@ impl Backend {
 }
 
 impl LanguageServer for Backend {
-    async fn initialize(&self, _: InitializeParams) -> JsonResult<InitializeResult> {
+    async fn initialize(&self, params: InitializeParams) -> JsonResult<InitializeResult> {
+        if let Some(root) = params
+            .workspace_folders
+            .as_ref()
+            // We take the first workspace folder
+            .and_then(|v| v.first())
+            .map(|f| &f.uri)
+            // Or failing that, the root_uri (which is deprecated in favour of workspace_folders)
+            .or(
+                #[allow(deprecated)]
+                params.root_uri.as_ref(),
+            )
+            .and_then(|u| u.to_file_path().map(PathBuf::from))
+            // Or failing that, the root_path (which is deprecated in favour of root_uri)
+            .or(
+                #[allow(deprecated)]
+                params.root_path.as_deref().map(PathBuf::from),
+            )
+        {
+            // Save the workspace root away for use during the configuration step
+            *self.root.write().await = root;
+        }
+
         Ok(InitializeResult {
             server_info: Some(ServerInfo {
                 name: "harper-ls".to_owned(),
@@ -455,6 +519,7 @@ impl LanguageServer for Backend {
                     commands: vec![
                         "HarperRecordLint".to_owned(),
                         "HarperAddToUserDict".to_owned(),
+                        "HarperAddToWSDict".to_owned(),
                         "HarperAddToFileDict".to_owned(),
                         "HarperOpen".to_owned(),
                         "HarperIgnoreLint".to_owned(),
@@ -612,8 +677,29 @@ impl LanguageServer for Backend {
                 let file_uri = second.parse().unwrap();
 
                 let mut dict = self.load_user_dictionary().await;
-                dict.append_word(word, WordMetadata::default());
+                dict.append_word(word, DictWordMetadata::default());
                 self.save_user_dictionary(dict)
+                    .await
+                    .map_err(|err| error!("{err}"))
+                    .err();
+                self.update_document_from_file(&file_uri, None)
+                    .await
+                    .map_err(|err| error!("{err}"))
+                    .err();
+                self.publish_diagnostics(&file_uri).await;
+            }
+            "HarperAddToWSDict" => {
+                let word = &first.chars().collect::<Vec<_>>();
+
+                let Some(second) = string_args.next() else {
+                    return Ok(None);
+                };
+
+                let file_uri = second.parse().unwrap();
+
+                let mut dict = self.load_workspace_dictionary().await;
+                dict.append_word(word, DictWordMetadata::default());
+                self.save_workspace_dictionary(dict)
                     .await
                     .map_err(|err| error!("{err}"))
                     .err();
@@ -642,7 +728,7 @@ impl LanguageServer for Backend {
                         return Ok(None);
                     }
                 };
-                dict.append_word(word, WordMetadata::default());
+                dict.append_word(word, DictWordMetadata::default());
 
                 self.save_file_dictionary(&file_uri, dict)
                     .await

@@ -24,7 +24,7 @@ impl Default for BackInTheDay {
             .then(phrase.clone())
             .then_whitespace()
             .then(exceptions.clone())
-            .or(phrase);
+            .or_longest(phrase);
 
         Self {
             expr: Box::new(pattern),
@@ -39,10 +39,10 @@ impl ExprLinter for BackInTheDay {
     }
 
     fn match_to_lint(&self, matched_tokens: &[Token], source: &[char]) -> Option<Lint> {
-        if let Some(tail) = matched_tokens.get(8..) {
-            if self.exceptions.matches(tail, source).is_some() {
-                return None;
-            }
+        if let Some(tail) = matched_tokens.get(8..)
+            && self.exceptions.matches(tail, source).is_some()
+        {
+            return None;
         }
 
         let span = matched_tokens.span()?;

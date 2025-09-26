@@ -41,7 +41,7 @@ Message: |
       11 | ## Article. I.
          |             ^~ Did you mean to spell `I.` this way?
 Suggest:
-  - Replace with: “Ix”
+  - Replace with: “In”
   - Replace with: “IC”
   - Replace with: “IE”
 
@@ -238,7 +238,7 @@ Suggest:
 
 
 
-Lint:    Miscellaneous (31 priority)
+Lint:    Redundancy (31 priority)
 Message: |
      103 | The Senate shall chuse their other Officers, and also a President pro tempore,
          |                                              ^~~~~~~~ Consider using just `and`.
@@ -341,6 +341,16 @@ Message: |
          | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      137 | and under such Penalties as each House may provide.
          | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ This sentence is 61 words long.
+
+
+
+Lint:    Style (31 priority)
+Message: |
+     133 | Each House shall be the Judge of the Elections, Returns and
+         |                                                 ^~~~~~~ An Oxford comma is necessary here.
+     134 | Qualifications of its own Members, and a Majority of each shall constitute a
+Suggest:
+  - Insert “,”
 
 
 
@@ -509,9 +519,9 @@ Message: |
      197 | be repassed by two thirds of the Senate and House of Representatives, according
          |    ^~~~~~~~ Did you mean to spell `repassed` this way?
 Suggest:
+  - Replace with: “rebased”
   - Replace with: “recessed”
   - Replace with: “rehashed”
-  - Replace with: “relapsed”
 
 
 
@@ -772,6 +782,16 @@ Message: |
          | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      316 | of the Congress.
          | ~~~~~~~~~~~~~~~~ This sentence is 73 words long.
+
+
+
+Lint:    Agreement (31 priority)
+Message: |
+     312 | on Imports or Exports, except what may be absolutely necessary for executing
+     313 | it's inspection Laws: and the net Produce of all Duties and Imposts, laid by
+         | ^~~~ Prefer the possessive pronoun `its` here to denote ownership.
+Suggest:
+  - Replace with: “its”
 
 
 
@@ -1146,7 +1166,7 @@ Message: |
 Lint:    Formatting (63 priority)
 Message: |
      455 | Oath or Affirmation:-- "I do solemnly swear (or affirm) that I will faithfully
-         |                     ^~ A sequence of hyphens is not an en dash.
+         |                     ^~ Replace these two hyphens with an en dash (–).
 Suggest:
   - Replace with: “–”
 
@@ -1325,18 +1345,6 @@ Message: |
 
 
 
-Lint:    Spelling (63 priority)
-Message: |
-     561 | Attainder of Treason shall work Corruption of Blood, or Forfeiture except
-     562 | during the Life of the Person attainted.
-         |                               ^~~~~~~~~ Did you mean to spell `attainted` this way?
-Suggest:
-  - Replace with: “attained”
-  - Replace with: “attainder”
-  - Replace with: “tainted”
-
-
-
 Lint:    Readability (127 priority)
 Message: |
      566 | The right of the people to be secure in their persons, houses,
@@ -1405,6 +1413,16 @@ Message: |
 
 
 
+Lint:    Style (31 priority)
+Message: |
+     603 | Congress may by general Laws prescribe the Manner in which such Acts, Records
+         |                                                                       ^~~~~~~ An Oxford comma is necessary here.
+     604 | and Proceedings shall be proved, and the Effect thereof.
+Suggest:
+  - Insert “,”
+
+
+
 Lint:    Readability (127 priority)
 Message: |
      610 | the State wherein they reside. No State shall make or enforce any law which
@@ -1417,18 +1435,6 @@ Message: |
          | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      614 | protection of the laws.
          | ~~~~~~~~~~~~~~~~~~~~~~~ This sentence is 52 words long.
-
-
-
-Lint:    Spelling (63 priority)
-Message: |
-     610 | the State wherein they reside. No State shall make or enforce any law which
-     611 | shall abridge the privileges or immunities of citizens of the United States;
-         |                                 ^~~~~~~~~~ Did you mean to spell `immunities` this way?
-Suggest:
-  - Replace with: “immunity's”
-  - Replace with: “immensities”
-  - Replace with: “immunizes”
 
 
 
@@ -1583,13 +1589,13 @@ Message: |
 
 
 
-Lint:    WordChoice (63 priority)
+Lint:    Style (31 priority)
 Message: |
-     658 | questioned. But neither the United States nor any State shall assume or pay any
-     659 | debt or obligation incurred in aid of insurrection or rebellion against the
-         | ^~~~~~~ Did you mean the closed compound noun “debtor”?
+     660 | United States, or any claim for the loss or emancipation of any slave; but all
+     661 | such debts, obligations and claims shall be held illegal and void.
+         |             ^~~~~~~~~~~ An Oxford comma is necessary here.
 Suggest:
-  - Replace with: “debtor”
+  - Insert “,”
 
 
 
@@ -1628,6 +1634,18 @@ Message: |
          | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      675 | without its Consent, shall be deprived of its equal Suffrage in the Senate.
          | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ This sentence is 143 words long.
+
+
+
+Lint:    Nonstandard (50 priority)
+Message: |
+     668 | proposing Amendments, which, in either Case, shall be valid to all Intents and
+         |                                                             ^~~~~~~~~~~~~~~~~~~
+     669 | Purposes, as Part of this Constitution, when ratified by the Legislatures of
+         | ~~~~~~~~ The time period is redundant because it repeats what's already specified by the AM/PM indicator.
+Suggest:
+  - Replace with: “to all Intents and Purposes”
+  - Replace with: “for alL intents anD purposes”
 
 
 

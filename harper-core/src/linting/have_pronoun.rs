@@ -1,5 +1,5 @@
-use crate::Token;
 use crate::expr::{AnchorStart, Expr, SequenceExpr};
+use crate::{Token, TokenKind};
 
 use super::{ExprLinter, Lint, LintKind, Suggestion};
 
@@ -13,9 +13,10 @@ impl Default for HavePronoun {
             .then(AnchorStart)
             .t_aco("has")
             .t_ws()
-            .then(|tok: &Token, _: &[char]| {
-                tok.kind.is_first_person_singular_pronoun() || tok.kind.is_plural_pronoun()
-            });
+            .then_kind_either(
+                TokenKind::is_first_person_singular_pronoun,
+                TokenKind::is_plural_pronoun,
+            );
 
         Self {
             expr: Box::new(expr),
@@ -36,7 +37,7 @@ impl ExprLinter for HavePronoun {
 
         Some(Lint {
             span,
-            lint_kind: LintKind::Miscellaneous,
+            lint_kind: LintKind::Agreement,
             suggestions: vec![Suggestion::replace_with_match_case(
                 "have".chars().collect(),
                 original,

@@ -23,11 +23,9 @@ impl Default for CompoundNounAfterDetAdj {
     fn default() -> Self {
         let context_expr = SequenceExpr::default()
             .then(|tok: &Token, src: &[char]| {
-                let Some(Some(meta)) = tok.kind.as_word() else {
-                    return false;
-                };
-                meta.is_determiner()
-                    || (meta.is_adjective() && *tok.span.get_content(src).to_lower() != ['g', 'o'])
+                tok.kind.is_determiner()
+                    || (tok.kind.is_adjective()
+                        && *tok.span.get_content(src).to_lower() != ['g', 'o'])
             })
             .t_ws()
             .then(is_content_word)
@@ -60,6 +58,15 @@ impl ExprLinter for CompoundNounAfterDetAdj {
     }
 
     fn match_to_lint(&self, matched_tokens: &[Token], source: &[char]) -> Option<Lint> {
+        if matched_tokens
+            .first()?
+            .span
+            .get_content(source)
+            .eq_ignore_ascii_case_str("that")
+        {
+            return None;
+        }
+
         let span = matched_tokens[2..].span()?;
         let orig = span.get_content(source);
         // If the pattern matched, this will not return `None`.

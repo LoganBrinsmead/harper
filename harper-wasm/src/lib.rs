@@ -8,8 +8,8 @@ use harper_core::language_detection::is_doc_likely_english;
 use harper_core::linting::{LintGroup, Linter as _};
 use harper_core::parsers::{IsolateEnglish, Markdown, Parser, PlainEnglish};
 use harper_core::{
-    CharString, Dictionary, Document, FstDictionary, IgnoredLints, LintContext, Lrc,
-    MergedDictionary, MutableDictionary, WordMetadata, remove_overlaps,
+    CharString, DictWordMetadata, Document, IgnoredLints, LintContext, Lrc, remove_overlaps,
+    spell::{Dictionary, FstDictionary, MergedDictionary, MutableDictionary},
 };
 use harper_stats::{Record, RecordKind, Stats};
 use serde::{Deserialize, Serialize};
@@ -305,7 +305,7 @@ impl Linter {
             .extend_words(additional_words.iter().map(|word| {
                 (
                     word.chars().collect::<CharString>(),
-                    WordMetadata::default(),
+                    DictWordMetadata::default(),
                 )
             }));
 
@@ -531,18 +531,18 @@ impl Span {
     }
 
     pub fn len(&self) -> usize {
-        Into::<harper_core::Span>::into(*self).len()
+        Into::<harper_core::Span<char>>::into(*self).len()
     }
 }
 
-impl From<Span> for harper_core::Span {
+impl From<Span> for harper_core::Span<char> {
     fn from(value: Span) -> Self {
         harper_core::Span::new(value.start, value.end)
     }
 }
 
-impl From<harper_core::Span> for Span {
-    fn from(value: harper_core::Span) -> Self {
+impl From<harper_core::Span<char>> for Span {
+    fn from(value: harper_core::Span<char>) -> Self {
         Span::new(value.start, value.end)
     }
 }

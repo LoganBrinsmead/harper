@@ -45,6 +45,18 @@ Message: |
 
 
 
+Lint:    Spelling (63 priority)
+Message: |
+      21 | be late!” (when she thought it over afterwards, it occurred to her that she
+         |                                     ^~~~~~~~~~ Did you mean to spell `afterwards` this way?
+      22 | ought to have wondered at this, but at the time it all seemed quite natural);
+Suggest:
+  - Replace with: “afterward”
+  - Replace with: “afterwords”
+  - Replace with: “afterword's”
+
+
+
 Lint:    Readability (127 priority)
 Message: |
       39 | next. First, she tried to look down and make out what she was coming to, but it
@@ -73,6 +85,29 @@ Message: |
 
 
 
+Lint:    Spelling (63 priority)
+Message: |
+      43 | shelves as she passed; it was labelled “ORANGE MARMALADE”, but to her great
+         |                               ^~~~~~~~ Did you mean to spell `labelled` this way?
+Suggest:
+  - Replace with: “labeled”
+  - Replace with: “labeler”
+  - Replace with: “labelless”
+
+
+
+Lint:    Spelling (63 priority)
+Message: |
+      54 | I’ve fallen by this time?” she said aloud. “I must be getting somewhere near the
+      55 | centre of the earth. Let me see: that would be four thousand miles down, I
+         | ^~~~~~ Did you mean to spell `centre` this way?
+Suggest:
+  - Replace with: “center”
+  - Replace with: “central”
+  - Replace with: “censure”
+
+
+
 Lint:    Readability (127 priority)
 Message: |
       55 | centre of the earth. Let me see: that would be four thousand miles down, I
@@ -90,13 +125,24 @@ Message: |
 
 
 
-Lint:    Miscellaneous (31 priority)
+Lint:    Enhancement (31 priority)
 Message: |
       57 | lessons in the schoolroom, and though this was not a very good opportunity for
          |                                                      ^~~~~~~~~ Vocabulary enhancement: use `excellent` instead of `very good`
       58 | showing off her knowledge, as there was no one to listen to her, still it was
 Suggest:
   - Replace with: “excellent”
+
+
+
+Lint:    Agreement (31 priority)
+Message: |
+      65 | downward! The Antipathies, I think—” (she was rather glad there was no one
+         |                                                                        ^~~~
+      66 | listening, this time, as it didn’t sound at all the right word) “—but I shall
+         | ~~~~~~~~~ `listening` is a mass noun.
+Suggest:
+  - Replace with: “one piece of listening”
 
 
 
@@ -107,8 +153,8 @@ Message: |
       69 | curtseying as you’re falling through the air! Do you think you could manage it?)
 Suggest:
   - Replace with: “curtsy”
+  - Replace with: “courtesy”
   - Replace with: “curse”
-  - Replace with: “cursed”
 
 
 
@@ -274,6 +320,18 @@ Message: |
 
 
 
+Lint:    Spelling (63 priority)
+Message: |
+     138 | finding it very nice, (it had, in fact, a sort of mixed flavour of cherry-tart,
+         |                                                         ^~~~~~~ Did you mean to spell `flavour` this way?
+     139 | custard, pine-apple, roast turkey, toffee, and hot buttered toast,) she very
+Suggest:
+  - Replace with: “flavor”
+  - Replace with: “favor”
+  - Replace with: “flour”
+
+
+
 Lint:    Readability (127 priority)
 Message: |
      146 | door into that lovely garden. First, however, she waited for a few minutes to
@@ -331,7 +389,7 @@ Message: |
 
 
 
-Lint:    Miscellaneous (31 priority)
+Lint:    Enhancement (31 priority)
 Message: |
      162 | sharply; “I advise you to leave off this minute!” She generally gave herself
      163 | very good advice, (though she very seldom followed it), and sometimes she
@@ -405,6 +463,16 @@ Message: |
 
 
 
+Lint:    Formatting (63 priority)
+Message: |
+     204 | > Alice’s Right Foot, Esq., Hearthrug, near the Fender, (with Alice’s love).
+         |                          ^~ Condense this punctuation cluster to a single mark.
+Suggest:
+  - Replace with: “,”
+  - Replace with: “.”
+
+
+
 Lint:    Capitalization (31 priority)
 Message: |
      226 | himself as he came, “Oh! the Duchess, the Duchess! Oh! won’t she be savage if
@@ -434,16 +502,6 @@ Message: |
          | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      230 | and the fan, and skurried away into the darkness as hard as he could go.
          | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ This sentence is 56 words long.
-
-
-
-Lint:    Miscellaneous (31 priority)
-Message: |
-     227 | I’ve kept her waiting!” Alice felt so desperate that she was ready to ask help
-     228 | of any one; so, when the Rabbit came near her, she began, in a low, timid voice,
-         |    ^~~~~~~ Did you mean the closed compound `anyone`?
-Suggest:
-  - Replace with: “anyone”
 
 
 
@@ -670,15 +728,22 @@ Message: |
 
 
 
+Lint:    Miscellaneous (31 priority)
+Message: |
+     361 | It was high time to go, for the pool was getting quite crowded with the birds
+         |    ^~~~ You may be missing a preposition here.
+
+
+
 Lint:    Spelling (63 priority)
 Message: |
      362 | and animals that had fallen into it: there were a Duck and a Dodo, a Lory and an
          |                                                                      ^~~~ Did you mean to spell `Lory` this way?
      363 | Eaglet, and several other curious creatures. Alice led the way, and the whole
 Suggest:
-  - Replace with: “Lora”
   - Replace with: “Lori”
   - Replace with: “Gory”
+  - Replace with: “Dory”
 
 
 
@@ -724,9 +789,9 @@ Message: |
          |                                                ^~~~ Did you mean to spell `Lory` this way?
      376 | and would only say, “I am older than you, and must know better;” and this Alice
 Suggest:
-  - Replace with: “Lora”
   - Replace with: “Lori”
   - Replace with: “Gory”
+  - Replace with: “Dory”
 
 
 
@@ -736,9 +801,21 @@ Message: |
          |                                                             ^~~~ Did you mean to spell `Lory` this way?
      378 | refused to tell its age, there was no more to be said.
 Suggest:
-  - Replace with: “Lora”
   - Replace with: “Lori”
   - Replace with: “Gory”
+  - Replace with: “Dory”
+
+
+
+Lint:    Spelling (63 priority)
+Message: |
+     387 | driest thing I know. Silence all round, if you please! ‘William the Conqueror,
+     388 | whose cause was favoured by the pope, was soon submitted to by the English, who
+         |                 ^~~~~~~~ Did you mean to spell `favoured` this way?
+Suggest:
+  - Replace with: “favored”
+  - Replace with: “flavored”
+  - Replace with: “floured”
 
 
 
@@ -765,9 +842,9 @@ Message: |
      392 | “Ugh!” said the Lory, with a shiver.
          |                 ^~~~ Did you mean to spell `Lory` this way?
 Suggest:
-  - Replace with: “Lora”
   - Replace with: “Lori”
   - Replace with: “Gory”
+  - Replace with: “Dory”
 
 
 
@@ -776,9 +853,9 @@ Message: |
      397 | “Not I!” said the Lory hastily.
          |                   ^~~~ Did you mean to spell `Lory` this way?
 Suggest:
-  - Replace with: “Lora”
   - Replace with: “Lori”
   - Replace with: “Gory”
+  - Replace with: “Dory”
 
 
 
@@ -863,9 +940,9 @@ Message: |
          |                                            ^~~~ Did you mean to spell `Lory` this way?
      528 | sight; and an old Crab took the opportunity of saying to her daughter “Ah, my
 Suggest:
-  - Replace with: “Lora”
   - Replace with: “Lori”
   - Replace with: “Gory”
+  - Replace with: “Dory”
 
 
 
@@ -874,9 +951,9 @@ Message: |
      536 | “And who is Dinah, if I might venture to ask the question?” said the Lory.
          |                                                                      ^~~~ Did you mean to spell `Lory` this way?
 Suggest:
-  - Replace with: “Lora”
   - Replace with: “Lori”
   - Replace with: “Gory”
+  - Replace with: “Dory”
 
 
 
@@ -895,7 +972,7 @@ Message: |
 
 
 
-Lint:    Miscellaneous (31 priority)
+Lint:    Enhancement (31 priority)
 Message: |
      564 | wonder?” Alice guessed in a moment that it was looking for the fan and the pair
      565 | of white kid gloves, and she very good-naturedly began hunting about for them,
@@ -1006,12 +1083,57 @@ Message: |
 
 Lint:    Spelling (63 priority)
 Message: |
+     660 | voice she had never heard before, “Sure then I’m here! Digging for apples, yer
+     661 | honour!”
+         | ^~~~~~ Did you mean to spell `honour` this way?
+Suggest:
+  - Replace with: “honor”
+  - Replace with: “hour”
+  - Replace with: “honer”
+
+
+
+Lint:    Spelling (63 priority)
+Message: |
+     668 | “Sure, it’s an arm, yer honour!” (He pronounced it “arrum.”)
+         |                         ^~~~~~ Did you mean to spell `honour` this way?
+Suggest:
+  - Replace with: “honor”
+  - Replace with: “hour”
+  - Replace with: “honer”
+
+
+
+Lint:    Spelling (63 priority)
+Message: |
      668 | “Sure, it’s an arm, yer honour!” (He pronounced it “arrum.”)
          |                                                     ^~~~~ Did you mean to spell `arrum` this way?
 Suggest:
   - Replace with: “arum”
   - Replace with: “album”
   - Replace with: “alum”
+
+
+
+Lint:    Spelling (63 priority)
+Message: |
+     672 | “Sure, it does, yer honour: but it’s an arm for all that.”
+         |                     ^~~~~~ Did you mean to spell `honour` this way?
+Suggest:
+  - Replace with: “honor”
+  - Replace with: “hour”
+  - Replace with: “honer”
+
+
+
+Lint:    Spelling (63 priority)
+Message: |
+     677 | then; such as, “Sure, I don’t like it, yer honour, at all, at all!” “Do as I
+         |                                            ^~~~~~ Did you mean to spell `honour` this way?
+Suggest:
+  - Replace with: “honor”
+  - Replace with: “hour”
+  - Replace with: “honer”
 
 
 
@@ -1201,7 +1323,19 @@ Message: |
 
 
 
-Lint:    Miscellaneous (31 priority)
+Lint:    Spelling (63 priority)
+Message: |
+     884 | > “In my youth,” said the sage, as he shook his grey locks, “I kept all my limbs
+         |                                                 ^~~~ Did you mean to spell `grey` this way?
+     885 | > very supple By the use of this ointment—one shilling the box— Allow me to sell
+Suggest:
+  - Replace with: “gray”
+  - Replace with: “grew”
+  - Replace with: “grep”
+
+
+
+Lint:    Enhancement (31 priority)
 Message: |
      929 | “It is a very good height indeed!” said the Caterpillar angrily, rearing itself
          |          ^~~~~~~~~ Vocabulary enhancement: use `excellent` instead of `very good`
@@ -1523,6 +1657,15 @@ Suggest:
 
 
 
+Lint:    Punctuation (31 priority)
+Message: |
+    1304 | I’m angry. Therefore I’m mad.”
+         |            ^~~~~~~~~ Discourse markers at the beginning of a sentence should be followed by a comma.
+Suggest:
+  - Insert “,”
+
+
+
 Lint:    Readability (127 priority)
 Message: |
     1348 | like ears and the roof was thatched with fur. It was so large a house, that she
@@ -1589,6 +1732,17 @@ Message: |
          |      ^~~~ This sentence does not start with a capital letter
 Suggest:
   - Replace with: “That”
+
+
+
+Lint:    Spelling (63 priority)
+Message: |
+    1497 | The Hatter shook his head mournfully. “Not I!” he replied. “We quarrelled last
+         |                                                                ^~~~~~~~~~ Did you mean to spell `quarrelled` this way?
+    1498 | March—just before he went mad, you know—” (pointing with his tea spoon at the
+Suggest:
+  - Replace with: “quarreled”
+  - Replace with: “quarreler”
 
 
 
@@ -1693,18 +1847,6 @@ Message: |
 
 
 
-Lint:    Spelling (63 priority)
-Message: |
-    1702 | all have our heads cut off, you know. So you see, Miss, we’re doing our best,
-    1703 | afore she comes, to—” At this moment Five, who had been anxiously looking across
-         | ^~~~~ Did you mean to spell `afore` this way?
-Suggest:
-  - Replace with: “adore”
-  - Replace with: “afire”
-  - Replace with: “fore”
-
-
-
 Lint:    Readability (127 priority)
 Message: |
     1708 | First came ten soldiers carrying clubs; these were all shaped like the three
@@ -1715,6 +1857,28 @@ Message: |
          | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     1711 | two, as the soldiers did. After these came the royal children; there were ten of
          | ~~~~~~~~~~~~~~~~~~~~~~~~~ This sentence is 45 words long.
+
+
+
+Lint:    Style (31 priority)
+Message: |
+    1708 | First came ten soldiers carrying clubs; these were all shaped like the three
+    1709 | gardeners, oblong and flat, with their hands and feet at the corners: next the
+         |            ^~~~~~ An Oxford comma is necessary here.
+Suggest:
+  - Insert “,”
+
+
+
+Lint:    Spelling (63 priority)
+Message: |
+    1713 | they were all ornamented with hearts. Next came the guests, mostly Kings and
+    1714 | Queens, and among them Alice recognised the White Rabbit: it was talking in a
+         |                              ^~~~~~~~~~ Did you mean to spell `recognised` this way?
+Suggest:
+  - Replace with: “recognized”
+  - Replace with: “recognize”
+  - Replace with: “recognizer”
 
 
 
@@ -1761,18 +1925,6 @@ Message: |
 
 
 
-Lint:    Spelling (63 priority)
-Message: |
-    1815 | furrows; the balls were live hedgehogs, the mallets live flamingoes, and the
-         |                                                          ^~~~~~~~~~ Did you mean to spell `flamingoes` this way?
-    1816 | soldiers had to double themselves up and to stand on their hands and feet, to
-Suggest:
-  - Replace with: “flamingo's”
-  - Replace with: “flamingos”
-  - Replace with: “flamingo”
-
-
-
 Lint:    Readability (127 priority)
 Message: |
     1819 | The chief difficulty Alice found at first was in managing her flamingo: she
@@ -1813,12 +1965,13 @@ Message: |
 
 
 
-Lint:    Miscellaneous (31 priority)
+Lint:    Spelling (63 priority)
 Message: |
-    1840 | people here; the great wonder is, that there’s any one left alive!”
-         |                                                ^~~~~~~ Did you mean the closed compound `anyone`?
+    1832 | The players all played at once without waiting for turns, quarrelling all the
+         |                                                           ^~~~~~~~~~~ Did you mean `quarreling`?
+    1833 | while, and fighting for the hedgehogs; and in a very short time the Queen was in
 Suggest:
-  - Replace with: “anyone”
+  - Replace with: “quarreling”
 
 
 
@@ -1856,18 +2009,6 @@ Message: |
 
 
 
-Lint:    Spelling (63 priority)
-Message: |
-    1863 | at the other end of the ground—and I should have croqueted the Queen’s hedgehog
-         |                                                  ^~~~~~~~~ Did you mean to spell `croqueted` this way?
-    1864 | just now, only it ran away when it saw mine coming!”
-Suggest:
-  - Replace with: “croquet's”
-  - Replace with: “coquetted”
-  - Replace with: “crocheted”
-
-
-
 Lint:    Style (31 priority)
 Message: |
     1894 | The Queen had only one way of settling all difficulties, great or small. “Off
@@ -1902,17 +2043,6 @@ Message: |
          | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     1910 | a tree.
          | ~~~~~~~ This sentence is 60 words long.
-
-
-
-Lint:    Spelling (63 priority)
-Message: |
-    1906 | The hedgehog was engaged in a fight with another hedgehog, which seemed to Alice
-    1907 | an excellent opportunity for croqueting one of them with the other: the only
-         |                              ^~~~~~~~~~ Did you mean to spell `croqueting` this way?
-Suggest:
-  - Replace with: “coquetting”
-  - Replace with: “crocheting”
 
 
 
@@ -2036,17 +2166,6 @@ Suggest:
 
 
 
-Lint:    Spelling (63 priority)
-Message: |
-    2004 | “Very true,” said the Duchess: “flamingoes and mustard both bite. And the moral
-         |                                 ^~~~~~~~~~ Did you mean to spell `flamingoes` this way?
-Suggest:
-  - Replace with: “flamingo's”
-  - Replace with: “flamingos”
-  - Replace with: “flamingo”
-
-
-
 Lint:    WordChoice (63 priority)
 Message: |
     2009 | “Right, as usual,” said the Duchess: “what a clear way you have of putting
@@ -2072,6 +2191,17 @@ Message: |
 
 
 
+Lint:    Spelling (63 priority)
+Message: |
+    2048 | But here, to Alice’s great surprise, the Duchess’s voice died away, even in the
+    2049 | middle of her favourite word ‘moral,’ and the arm that was linked into hers
+         |               ^~~~~~~~~ Did you mean to spell `favourite` this way?
+Suggest:
+  - Replace with: “favorite”
+  - Replace with: “favorites”
+
+
+
 Lint:    Readability (127 priority)
 Message: |
     2064 | The other guests had taken advantage of the Queen’s absence, and were resting in
@@ -2080,6 +2210,16 @@ Message: |
          | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     2066 | Queen merely remarking that a moment’s delay would cost them their lives.
          | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ This sentence is 41 words long.
+
+
+
+Lint:    Spelling (63 priority)
+Message: |
+    2068 | All the time they were playing the Queen never left off quarrelling with the
+         |                                                         ^~~~~~~~~~~ Did you mean `quarreling`?
+    2069 | other players, and shouting “Off with his head!” or “Off with her head!” Those
+Suggest:
+  - Replace with: “quarreling”
 
 
 
@@ -2250,25 +2390,6 @@ Message: |
 Suggest:
   - Replace with: “ours”
   - Replace with: “they”
-
-
-
-Lint:    Spelling (63 priority)
-Message: |
-    2189 | then the different branches of Arithmetic—Ambition, Distraction, Uglification,
-         |                                                                  ^~~~~~~~~~~~ Did you mean `Vilification`?
-    2190 | and Derision.”
-Suggest:
-  - Replace with: “Vilification”
-
-
-
-Lint:    Spelling (63 priority)
-Message: |
-    2192 | “I never heard of ‘Uglification,’” Alice ventured to say. “What is it?”
-         |                    ^~~~~~~~~~~~ Did you mean `Vilification`?
-Suggest:
-  - Replace with: “Vilification”
 
 
 
@@ -2559,9 +2680,9 @@ Message: |
     2335 | “I don’t know where Dinn may be,” said the Mock Turtle, “but if you’ve seen them
          |                     ^~~~ Did you mean to spell `Dinn` this way?
 Suggest:
-  - Replace with: “Dine”
+  - Replace with: “Din”
+  - Replace with: “Ding”
   - Replace with: “Diann”
-  - Replace with: “Dina”
 
 
 
@@ -2784,9 +2905,9 @@ Message: |
     2477 | eagerly that the Gryphon said, in a rather offended tone, “Hm! No accounting for
          |                                                            ^~ Did you mean to spell `Hm` this way?
 Suggest:
-  - Replace with: “H”
+  - Replace with: “H'm”
+  - Replace with: “Ha”
   - Replace with: “Ham”
-  - Replace with: “He”
 
 
 
@@ -2806,9 +2927,9 @@ Message: |
     2485 | > evening, beautiful Soup! Beau—ootiful Soo—oop! Beau—ootiful Soo—oop! Soo—oop
          |                                         ^~~ Did you mean to spell `Soo` this way?
 Suggest:
+  - Replace with: “Solo”
   - Replace with: “Sop”
-  - Replace with: “Soho”
-  - Replace with: “Soto”
+  - Replace with: “Sou”
 
 
 
@@ -2839,9 +2960,9 @@ Message: |
     2485 | > evening, beautiful Soup! Beau—ootiful Soo—oop! Beau—ootiful Soo—oop! Soo—oop
          |                                                               ^~~ Did you mean to spell `Soo` this way?
 Suggest:
+  - Replace with: “Solo”
   - Replace with: “Sop”
-  - Replace with: “Soho”
-  - Replace with: “Soto”
+  - Replace with: “Sou”
 
 
 
@@ -2862,9 +2983,9 @@ Message: |
          |                                                                        ^~~ Did you mean to spell `Soo` this way?
     2486 | > of the e—e—evening, Beautiful, beautiful Soup!
 Suggest:
+  - Replace with: “Solo”
   - Replace with: “Sop”
-  - Replace with: “Soho”
-  - Replace with: “Soto”
+  - Replace with: “Sou”
 
 
 
@@ -2916,9 +3037,9 @@ Message: |
     2490 | > beautiful Soup? Beau—ootiful Soo—oop! Beau—ootiful Soo—oop! Soo—oop of the
          |                                ^~~ Did you mean to spell `Soo` this way?
 Suggest:
+  - Replace with: “Solo”
   - Replace with: “Sop”
-  - Replace with: “Soho”
-  - Replace with: “Soto”
+  - Replace with: “Sou”
 
 
 
@@ -2949,9 +3070,9 @@ Message: |
     2490 | > beautiful Soup? Beau—ootiful Soo—oop! Beau—ootiful Soo—oop! Soo—oop of the
          |                                                      ^~~ Did you mean to spell `Soo` this way?
 Suggest:
+  - Replace with: “Solo”
   - Replace with: “Sop”
-  - Replace with: “Soho”
-  - Replace with: “Soto”
+  - Replace with: “Sou”
 
 
 
@@ -2972,9 +3093,9 @@ Message: |
          |                                                               ^~~ Did you mean to spell `Soo` this way?
     2491 | > e—e—evening, Beautiful, beauti—FUL SOUP!”
 Suggest:
+  - Replace with: “Solo”
   - Replace with: “Sop”
-  - Replace with: “Soho”
-  - Replace with: “Soto”
+  - Replace with: “Sou”
 
 
 
@@ -3047,9 +3168,9 @@ Message: |
     2503 | > “Soo—oop of the e—e—evening, Beautiful, beautiful Soup!”
          |    ^~~ Did you mean to spell `Soo` this way?
 Suggest:
+  - Replace with: “Solo”
   - Replace with: “Sop”
-  - Replace with: “Soho”
-  - Replace with: “Soto”
+  - Replace with: “Sou”
 
 
 
@@ -3120,6 +3241,17 @@ Message: |
     2539 | they should forget them before the end of the trial.”
 Suggest:
   - Replace with: “Krypton”
+
+
+
+Lint:    Spelling (63 priority)
+Message: |
+    2547 | even make out that one of them didn’t know how to spell “stupid,” and that he
+    2548 | had to ask his neighbour to tell him. “A nice muddle their slates’ll be in
+         |                ^~~~~~~~~ Did you mean to spell `neighbour` this way?
+Suggest:
+  - Replace with: “neighbor”
+  - Replace with: “neighbors”
 
 
 
@@ -3262,15 +3394,6 @@ Message: |
 
 
 
-Lint:    Miscellaneous (31 priority)
-Message: |
-    2891 | “If any one of them can explain it,” said Alice, (she had grown so large in the
-         |     ^~~~~~~ Did you mean the closed compound `anyone`?
-Suggest:
-  - Replace with: “anyone”
-
-
-
 Lint:    Readability (127 priority)
 Message: |
     2907 | “All right, so far,” said the King, and he went on muttering over the verses to
@@ -3290,6 +3413,17 @@ Message: |
          | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     2920 | ink, that was trickling down his face, as long as it lasted.)
          | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ This sentence is 41 words long.
+
+
+
+Lint:    Spelling (63 priority)
+Message: |
+    2929 | “No, no!” said the Queen. “Sentence first—verdict afterwards.”
+         |                                                   ^~~~~~~~~~ Did you mean to spell `afterwards` this way?
+Suggest:
+  - Replace with: “afterward”
+  - Replace with: “afterwords”
+  - Replace with: “afterword's”
 
 
 
@@ -3320,15 +3454,6 @@ Message: |
          | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     2955 | it’s getting late.” So Alice got up and ran off, thinking while she ran, as well
          | ~~~~~~~~~~~~~~~~~~ This sentence is 55 words long.
-
-
-
-Lint:    Miscellaneous (31 priority)
-Message: |
-    2954 | and said, “It was a curious dream, dear, certainly: but now run in to your tea;
-         |                                                                 ^~~~~ Did you mean the closed compound `into`?
-Suggest:
-  - Replace with: “into”
 
 
 
@@ -3394,6 +3519,17 @@ Message: |
 
 Lint:    Spelling (63 priority)
 Message: |
+    2972 | The long grass rustled at her feet as the White Rabbit hurried by—the frightened
+    2973 | Mouse splashed his way through the neighbouring pool—she could hear the rattle
+         |                                    ^~~~~~~~~~~~ Did you mean `neighboring`?
+    2974 | of the teacups as the March Hare and his friends shared their never-ending meal,
+Suggest:
+  - Replace with: “neighboring”
+
+
+
+Lint:    Spelling (63 priority)
+Message: |
     2977 | plates and dishes crashed around it—once more the shriek of the Gryphon, the
          |                                                                 ^~~~~~~ Did you mean `Krypton`?
     2978 | squeaking of the Lizard’s slate-pencil, and the choking of the suppressed
@@ -3432,6 +3568,18 @@ Message: |
     2988 | noises, would change (she knew) to the confused clamour of the busy
 Suggest:
   - Replace with: “Krypton”
+
+
+
+Lint:    Spelling (63 priority)
+Message: |
+    2988 | noises, would change (she knew) to the confused clamour of the busy
+         |                                                 ^~~~~~~ Did you mean to spell `clamour` this way?
+    2989 | farm-yard—while the lowing of the cattle in the distance would take the place of
+Suggest:
+  - Replace with: “clamor”
+  - Replace with: “glamour”
+  - Replace with: “clamber”
 
 
 

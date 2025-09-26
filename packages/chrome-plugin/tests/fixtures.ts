@@ -1,31 +1,12 @@
 import path from 'path';
-import { type BrowserContext, test as base, chromium } from '@playwright/test';
+import { createFixture } from 'playwright-webextext';
 
-export const test = base.extend<{
-	context: BrowserContext;
-	extensionId: string;
-}>({
-	// biome-ignore lint/correctness/noEmptyPattern: it's by Playwright. Explanation not provided.
-	context: async ({}, use) => {
-		const pathToExtension = path.join(import.meta.dirname, '../build');
-		console.log(`Loading extension from ${pathToExtension}`);
-		const context = await chromium.launchPersistentContext('', {
-			channel: 'chromium',
-			args: [
-				`--disable-extensions-except=${pathToExtension}`,
-				`--load-extension=${pathToExtension}`,
-			],
-		});
-		await use(context);
-		await context.close();
-	},
-	extensionId: async ({ context }, use) => {
-		let [background] = context.serviceWorkers();
-		if (!background) background = await context.waitForEvent('serviceworker');
+const pathToExtension = path.join(import.meta.dirname, '../build');
+const { test, expect } = createFixture(pathToExtension);
 
-		const extensionId = background.url().split('/')[2];
-		await use(extensionId);
-	},
+test.afterEach(async ({ context }) => {
+	const bg = context.serviceWorkers()[0] ?? context.backgroundPages()[0];
+	if (bg) await bg.evaluate(() => chrome?.storage?.local.clear?.());
 });
 
-export const expect = test.expect;
+export { test, expect };

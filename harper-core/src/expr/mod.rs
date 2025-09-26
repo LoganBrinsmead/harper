@@ -1,6 +1,22 @@
+//! An `Expr` is a declarative way to express whether a certain set of tokens fulfill a criteria.
+//!
+//! For example, if we want to look for the word "that" followed by an adjective, we could build an
+//! expression to do so.
+//!
+//! The actual searching is done by another system (usually a part of the [lint framework](crate::linting::ExprLinter)).
+//! It iterates through a document, checking if each index matches the criteria.
+//!
+//! When supplied a specific position in a token stream, the technical job of an `Expr` is to determine the window of tokens (including the cursor itself) that fulfills whatever criteria the author desires.
+//!
+//! The goal of the `Expr` initiative is to make rules easier to _read_ as well as to write.
+//! Gone are the days of trying to manually parse the logic of another man's Rust code.
+//!
+//! See also: [`SequenceExpr`].
+
 mod all;
 mod anchor_end;
 mod anchor_start;
+mod duration_expr;
 mod expr_map;
 mod first_match_of;
 mod fixed_phrase;
@@ -25,6 +41,7 @@ use std::sync::Arc;
 pub use all::All;
 pub use anchor_end::AnchorEnd;
 pub use anchor_start::AnchorStart;
+pub use duration_expr::DurationExpr;
 pub use expr_map::ExprMap;
 pub use first_match_of::FirstMatchOf;
 pub use fixed_phrase::FixedPhrase;
@@ -44,19 +61,15 @@ pub use word_expr_group::WordExprGroup;
 
 use crate::{Document, LSend, Span, Token};
 
-/// A common problem in Harper is that we need to identify tokens that fulfil certain criterion.
-/// An `Expr` is a way to express whether a certain set of tokens fulfil that criteria.
-/// When supplied a specific position in a token stream, the job of an `Expr` is to determine the window of tokens (including the cursor itself) that fulfils whatever criteria the author desires.
-/// It is then the job of another system to identify portions of documents that fulfil this criteria.
 pub trait Expr: LSend {
-    fn run(&self, cursor: usize, tokens: &[Token], source: &[char]) -> Option<Span>;
+    fn run(&self, cursor: usize, tokens: &[Token], source: &[char]) -> Option<Span<Token>>;
 }
 
 impl<S> Expr for S
 where
     S: Step + ?Sized,
 {
-    fn run(&self, cursor: usize, tokens: &[Token], source: &[char]) -> Option<Span> {
+    fn run(&self, cursor: usize, tokens: &[Token], source: &[char]) -> Option<Span<Token>> {
         self.step(tokens, cursor, source).map(|s| {
             if s >= 0 {
                 Span::new_with_len(cursor, s as usize)
@@ -71,7 +84,7 @@ impl<E> Expr for Arc<E>
 where
     E: Expr,
 {
-    fn run(&self, cursor: usize, tokens: &[Token], source: &[char]) -> Option<Span> {
+    fn run(&self, cursor: usize, tokens: &[Token], source: &[char]) -> Option<Span<Token>> {
         self.as_ref().run(cursor, tokens, source)
     }
 }
@@ -81,7 +94,7 @@ impl<E> Expr for Rc<E>
 where
     E: Expr,
 {
-    fn run(&self, cursor: usize, tokens: &[Token], source: &[char]) -> Option<Span> {
+    fn run(&self, cursor: usize, tokens: &[Token], source: &[char]) -> Option<Span<Token>> {
         self.as_ref().run(cursor, tokens, source)
     }
 }
@@ -101,9 +114,12 @@ pub trait ExprExt {
         &'a self,
         tokens: &'a [Token],
         source: &'a [char],
-    ) -> Box<dyn Iterator<Item = Span> + 'a>;
+    ) -> Box<dyn Iterator<Item = Span<Token>> + 'a>;
 
-    fn iter_matches_in_doc<'a>(&'a self, doc: &'a Document) -> Box<dyn Iterator<Item = Span> + 'a>;
+    fn iter_matches_in_doc<'a>(
+        &'a self,
+        doc: &'a Document,
+    ) -> Box<dyn Iterator<Item = Span<Token>> + 'a>;
 }
 
 impl<E: ?Sized> ExprExt for E
@@ -114,7 +130,7 @@ where
         &'a self,
         tokens: &'a [Token],
         source: &'a [char],
-    ) -> Box<(dyn Iterator<Item = Span> + 'a)> {
+    ) -> Box<dyn Iterator<Item = Span<Token>> + 'a> {
         let mut last_end = 0usize;
 
         Box::new((0..tokens.len()).filter_map(move |i| {
@@ -131,20 +147,29 @@ where
     fn iter_matches_in_doc<'a>(
         &'a self,
         doc: &'a Document,
-    ) -> Box<(dyn Iterator<Item = Span> + 'a)> {
+    ) -> Box<dyn Iterator<Item = Span<Token>> + 'a> {
         Box::new(self.iter_matches(doc.get_tokens(), doc.get_source()))
     }
 }
 
 pub trait OwnedExprExt {
-    fn or(self, other: impl Expr + 'static) -> LongestMatchOf;
+    fn or(self, other: impl Expr + 'static) -> FirstMatchOf;
+    fn or_longest(self, other: impl Expr + 'static) -> LongestMatchOf;
 }
 
 impl<E> OwnedExprExt for E
 where
     E: Expr + 'static,
 {
-    fn or(self, other: impl Expr + 'static) -> LongestMatchOf {
+    /// Returns an expression that matches either the current one or the expression contained in `other`.
+    fn or(self, other: impl Expr + 'static) -> FirstMatchOf {
+        FirstMatchOf::new(vec![Box::new(self), Box::new(other)])
+    }
+
+    /// Returns an expression that matches the longest of the current one or the expression contained in `other`.
+    ///
+    /// If you don't need the longest match, prefer using the short-circuiting [`Self::or()`] instead.
+    fn or_longest(self, other: impl Expr + 'static) -> LongestMatchOf {
         LongestMatchOf::new(vec![Box::new(self), Box::new(other)])
     }
 }
