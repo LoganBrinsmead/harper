@@ -418,6 +418,7 @@ impl SequenceExpr {
     gen_then_from_is!(third_person_pronoun);
     gen_then_from_is!(third_person_singular_pronoun);
     gen_then_from_is!(third_person_plural_pronoun);
+    gen_then_from_is!(subject_pronoun);
     gen_then_from_is!(object_pronoun);
 
     // Verbs
@@ -463,6 +464,7 @@ impl SequenceExpr {
     gen_then_from_is!(hyphen);
     gen_then_from_is!(period);
     gen_then_from_is!(semicolon);
+    gen_then_from_is!(quote);
 
     // Other
 
