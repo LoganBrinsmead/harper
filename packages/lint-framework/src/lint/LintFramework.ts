@@ -4,6 +4,7 @@ import Highlights from './Highlights';
 import PopupHandler from './PopupHandler';
 import type { UnpackedLint, UnpackedLintGroups } from './unpackLint';
 import ProtocolClient from '../../../chrome-plugin/src/ProtocolClient'
+import type { IgnorableLintBox } from './Box';
 
 type ActivationKey = 'off' | 'shift' | 'control';
 
@@ -28,6 +29,7 @@ export default class LintFramework {
 	private lintRequested = false;
 	private renderRequested = false;
 	private lastLints: { target: HTMLElement; lints: UnpackedLintGroups }[] = [];
+	private lastBoxes: IgnorableLintBox[] = [];
 
 	/** The function to be called to re-render the highlights. This is a variable because it is used to register/deregister event listeners. */
 	private updateEventCallback: () => void;
@@ -153,11 +155,20 @@ export default class LintFramework {
 
 			if (match) {
 				event.preventDefault();
-				this.lastBoxes[this.lastBoxes.length - 1].applySuggestion(this.lastLints[this.lastLints.length - 1].lints[this.lastLints[0].lints.length - 1].suggestions[0]);
+				event.stopImmediatePropagation();
+				let previousBox = this.lastBoxes[this.lastBoxes.length - 1];
+				let previousLint = this.lastLints[this.lastLints.length - 1];
+				if(previousBox.lint.suggestions.length > 0) {
+					const allLints = Object.values(previousLint.lints).flat();
+					previousBox.applySuggestion(allLints[allLints.length - 1].suggestions[0]);
+
+				} else {
+					previousBox.ignoreLint?.();
+				}
 
 			}
 
-		});
+		}, {capture: true});
 
 	}
 
@@ -243,6 +254,7 @@ export default class LintFramework {
 			this.popupHandler.updateLintBoxes(boxes);
 
 			this.renderRequested = false;
+			this.lastBoxes = boxes;
 		});
 	}
 }
