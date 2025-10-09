@@ -18,7 +18,7 @@ let modifyHotkeyButton: Button;
 let hotkey : Hotkey = $state({modifiers: ['Ctrl'], key: 'e'});
 
 $effect(() => {
-	ProtocolClient.setLintConfig(lintConfig);
+	ProtocolClient.setLintConfig($state.snapshot(lintConfig));
 });
 
 $effect(() => {
