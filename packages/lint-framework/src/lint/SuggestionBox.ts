@@ -110,6 +110,7 @@ function button(
 			style: extraStyle,
 			onclick: onClick,
 			title: desc,
+			type: 'button',
 			'aria-label': desc,
 			...extraProps,
 		},
