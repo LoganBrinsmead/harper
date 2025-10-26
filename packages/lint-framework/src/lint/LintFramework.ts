@@ -3,8 +3,13 @@ import { isVisible } from './domUtils';
 import Highlights from './Highlights';
 import PopupHandler from './PopupHandler';
 import type { UnpackedLint } from './unpackLint';
+import ProtocolClient from '../../../chrome-plugin/src/ProtocolClient';
 
 type ActivationKey = 'off' | 'shift' | 'control';
+
+type RenderMethod = 'default' | 'space' | 'stop';
+
+let renderTimer: ReturnType<typeof setTimeout> | null = null;
 
 /** Events on an input (any kind) that can trigger a re-render. */
 const INPUT_EVENTS = ['focus', 'keyup', 'paste', 'change', 'scroll'];
@@ -30,6 +35,7 @@ export default class LintFramework {
 	private actions: {
 		ignoreLint?: (hash: string) => Promise<void>;
 		getActivationKey?: () => Promise<ActivationKey>;
+		getRenderMethod?: () => Promise<RenderMethod>;
 		openOptions?: () => Promise<void>;
 		addToUserDictionary?: (words: string[]) => Promise<void>;
 	};
@@ -39,6 +45,7 @@ export default class LintFramework {
 		actions: {
 			ignoreLint?: (hash: string) => Promise<void>;
 			getActivationKey?: () => Promise<ActivationKey>;
+			getRenderMethod?: () => Promise<RenderMethod>;
 			openOptions?: () => Promise<void>;
 			addToUserDictionary?: (words: string[]) => Promise<void>;
 		},
@@ -84,7 +91,7 @@ export default class LintFramework {
 	}
 
 	async update() {
-		this.requestRender();
+		this.determineRenderMethod();
 		this.requestLintUpdate();
 	}
 
@@ -119,7 +126,7 @@ export default class LintFramework {
 
 		this.lastLints = lintResults.filter((r) => r.target != null) as any;
 		this.lintRequested = false;
-		this.requestRender();
+		this.determineRenderMethod();
 	}
 
 	public async addTarget(target: Node) {
@@ -177,6 +184,33 @@ export default class LintFramework {
 		for (const event of PAGE_EVENTS) {
 			window.addEventListener(event, this.updateEventCallback);
 		}
+	}
+
+	private async determineRenderMethod() {
+		let renderMethod: RenderMethod = await ProtocolClient.getRenderMethod();
+
+		if(renderMethod === 'space') {
+			window.addEventListener('keyup', (event: KeyboardEvent) => {
+				let key = event.code;
+				let expectedKey = 'Space';
+				if(key === expectedKey) {
+					this.requestRender();
+				}
+			})
+		} else if(renderMethod === 'stop') {
+			document.querySelectorAll('input[type="text"]').forEach((input) => {
+			input.addEventListener('input', () => {
+					if(renderTimer) clearTimeout(renderTimer);
+					renderTimer = setTimeout(() => {
+						console.log(`User stopped typing in ${input.id}`);
+						this.requestRender();
+					}, 2000);
+				});
+			});		
+		} else {
+			this.requestRender();
+		}
+
 	}
 
 	private requestRender() {

@@ -16,10 +16,12 @@ import {
 	type GetEnabledDomainsResponse,
 	type GetLintDescriptionsRequest,
 	type GetLintDescriptionsResponse,
+	type GetRenderMethodRequest,
 	type GetUserDictionaryResponse,
 	type IgnoreLintRequest,
 	type LintRequest,
 	type LintResponse,
+	RenderMethod,
 	type Request,
 	type Response,
 	type SetActivationKeyRequest,
@@ -27,6 +29,7 @@ import {
 	type SetDefaultStatusRequest,
 	type SetDialectRequest,
 	type SetDomainStatusRequest,
+	type SetRenderMethodRequest,
 	type SetUserDictionaryRequest,
 	type UnitResponse,
 } from '../protocol';
@@ -135,6 +138,10 @@ function handleRequest(message: Request): Promise<Response> {
 			return handleGetUserDictionary();
 		case 'setUserDictionary':
 			return handleSetUserDictionary(message);
+		case 'getRenderMethod':
+			return handleGetRenderMethod();
+		case 'setRenderMethod':
+			return handleSetRenderMethod(message);
 		case 'getActivationKey':
 			return handleGetActivationKey();
 		case 'setActivationKey':
@@ -263,6 +270,22 @@ async function handleSetActivationKey(req: SetActivationKeyRequest): Promise<Uni
 	return createUnitResponse();
 }
 
+async function handleGetRenderMethod(): Promise<GetRenderMethodResponse> {
+	const renderMethod = await getRenderMethod();
+
+	return { kind: 'getRenderMethod', renderMethod };
+}
+
+async function handleSetRenderMethod(req: SetRenderMethodRequest): Promise<UnitResponse> {
+	if (!Object.values(RenderMethod).includes(req.renderMethod)) {
+		throw new Error(`Invalid activation key: ${req.renderMethod}`);
+	}
+	await setRenderMethod(req.renderMethod);
+
+	return createUnitResponse();
+}
+
+
 /** Set the lint configuration inside the global `linter` and in permanent storage. */
 async function setLintConfig(lintConfig: LintConfig): Promise<void> {
 	await linter.setLintConfig(lintConfig);
@@ -308,6 +331,16 @@ async function getActivationKey(): Promise<ActivationKey> {
 async function setActivationKey(key: ActivationKey) {
 	await chrome.storage.local.set({ activationKey: key });
 }
+
+async function getRenderMethod(): Promise<RenderMethod> {
+	const resp = await chrome.storage.local.get({ renderMethod: RenderMethod.Default });
+	return resp.renderMethod;
+}
+
+async function setRenderMethod(renderMethod: RenderMethod) {
+	await chrome.storage.local.set({ renderMethod: renderMethod });
+}
+
 
 function initializeLinter(dialect: Dialect) {
 	linter = new LocalLinter({

@@ -1,5 +1,5 @@
-import type { Dialect, LintConfig, Summary } from 'harper.js';
-import type { UnpackedLint, UnpackedSuggestion } from 'lint-framework';
+import type { Dialect, LintConfig } from 'harper.js';
+import type { UnpackedLint } from '../../../packages/lint-framework/src/lint/unpackLint';
 
 export type Request =
 	| LintRequest
@@ -19,6 +19,8 @@ export type Request =
 	| GetUserDictionaryRequest
 	| GetActivationKeyRequest
 	| SetActivationKeyRequest
+	| GetRenderMethodRequest
+	| SetRenderMethodRequest
 	| OpenOptionsRequest;
 
 export type Response =
@@ -31,7 +33,8 @@ export type Response =
 	| GetDefaultStatusResponse
 	| GetEnabledDomainsResponse
 	| GetUserDictionaryResponse
-	| GetActivationKeyResponse;
+	| GetActivationKeyResponse
+	| GetRenderMethodResponse;
 
 export type LintRequest = {
 	kind: 'lint';
@@ -173,6 +176,27 @@ export type SetActivationKeyRequest = {
 	kind: 'setActivationKey';
 	key: ActivationKey;
 };
+
+export enum RenderMethod {
+	Default = 'default',
+	Space = 'space',
+	Stop = 'stop',
+}
+
+export type GetRenderMethodRequest = {
+	kind: 'getRenderMethod';
+};
+
+export type GetRenderMethodResponse = {
+	kind: 'getRenderMethod';
+	renderMethod: RenderMethod;
+};
+
+export type SetRenderMethodRequest = {
+	kind: 'setRenderMethod';
+	renderMethod: RenderMethod;
+};
+
 
 export type OpenOptionsRequest = {
 	kind: 'openOptions';

@@ -3,7 +3,7 @@ import { Button, Input, Select } from 'flowbite-svelte';
 import { Dialect, type LintConfig } from 'harper.js';
 import logo from '/logo.png';
 import ProtocolClient from '../ProtocolClient';
-import { ActivationKey } from '../protocol';
+import { ActivationKey, RenderMethod } from '../protocol';
 
 let lintConfig: LintConfig = $state({});
 let lintDescriptions: Record<string, string> = $state({});
@@ -13,6 +13,7 @@ let dialect = $state(Dialect.American);
 let defaultEnabled = $state(false);
 let activationKey: ActivationKey = $state(ActivationKey.Off);
 let userDict = $state('');
+let renderMethod: RenderMethod = $state(RenderMethod.Default);
 
 $effect(() => {
 	ProtocolClient.setLintConfig(lintConfig);
@@ -24,6 +25,10 @@ $effect(() => {
 
 $effect(() => {
 	ProtocolClient.setDefaultEnabled(defaultEnabled);
+});
+
+$effect(() => {
+	ProtocolClient.setRenderMethod(renderMethod);
 });
 
 $effect(() => {
@@ -53,6 +58,10 @@ ProtocolClient.getDefaultEnabled().then((d) => {
 
 ProtocolClient.getActivationKey().then((d) => {
 	activationKey = d;
+});
+
+ProtocolClient.getRenderMethod().then((d) => {
+	renderMethod = d;
 });
 
 ProtocolClient.getUserDictionary().then((d) => {
@@ -164,6 +173,19 @@ async function exportEnabledDomainsCSV() {
       </div>
 
       
+      <div class="space-y-5">
+        <div class="flex items-center justify-between">
+          <div class="flex flex-col">
+            <span class="font-medium">Spell Checking Mode</span>
+            <span class="font-light">Controls the timing when spell checking is applied.</span>
+          </div>
+          <Select size="sm" color="primary" class="w-44" bind:value={renderMethod}>
+            <option value={RenderMethod.Default}>Instant (Default)</option>
+            <option value={RenderMethod.Space}>After Spacebar Press</option>
+            <option value={RenderMethod.Stop}>After Typing Stops</option>
+          </Select>
+        </div>
+      </div>
 
       <div class="space-y-5">
         <div class="flex items-center justify-between">
