@@ -92,7 +92,7 @@ export default class LintFramework {
 
 	async update() {
 		this.determineSpellCheckingMode();
-		this.requestLintUpdate();
+		this.requestRender();
 	}
 
 	async requestLintUpdate() {
@@ -126,7 +126,6 @@ export default class LintFramework {
 
 		this.lastLints = lintResults.filter((r) => r.target != null) as any;
 		this.lintRequested = false;
-		this.determineSpellCheckingMode();
 	}
 
 	public async addTarget(target: Node) {
@@ -194,7 +193,7 @@ export default class LintFramework {
 					let key = event.code;
 					let expectedKey = 'Space';
 					if(key === expectedKey) {
-						this.requestRender();
+						this.requestLintUpdate();
 					}
 				});
 				break;
@@ -202,12 +201,12 @@ export default class LintFramework {
 				window.addEventListener('input', () => {
 						if(renderTimer) clearTimeout(renderTimer);
 						renderTimer = setTimeout(() => {
-							this.requestRender();
+							this.requestLintUpdate();
 						}, 2000);
 					}, {once: true});
 				break;
 			case 'default':
-				this.requestRender();
+				this.requestLintUpdate();
 
 		}
 
