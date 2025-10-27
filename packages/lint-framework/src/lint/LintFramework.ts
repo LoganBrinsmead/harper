@@ -204,7 +204,7 @@ export default class LintFramework {
 						renderTimer = setTimeout(() => {
 							this.requestRender();
 						}, 2000);
-					});
+					}, {once: true});
 				break;
 			case 'default':
 				this.requestRender();
