@@ -199,42 +199,17 @@ export default class LintFramework {
 				});
 				break;
 			case 'stop':
-				document.querySelectorAll('input[type="text"]').forEach((input) => {
-					input.addEventListener('input', () => {
-							if(renderTimer) clearTimeout(renderTimer);
-							renderTimer = setTimeout(() => {
-								console.log(`User stopped typing in ${input.id}`);
-								this.requestRender();
-							}, 2000);
-						});
-				});		
+				window.addEventListener('input', () => {
+						if(renderTimer) clearTimeout(renderTimer);
+						renderTimer = setTimeout(() => {
+							this.requestRender();
+						}, 2000);
+					});
 				break;
 			case 'default':
 				this.requestRender();
 
 		}
-
-		// if(renderMethod === 'space') {
-		// 	window.addEventListener('keyup', (event: KeyboardEvent) => {
-		// 		let key = event.code;
-		// 		let expectedKey = 'Space';
-		// 		if(key === expectedKey) {
-		// 			this.requestRender();
-		// 		}
-		// 	})
-		// } else if(renderMethod === 'stop') {
-		// 	document.querySelectorAll('input[type="text"]').forEach((input) => {
-		// 	input.addEventListener('input', () => {
-		// 			if(renderTimer) clearTimeout(renderTimer);
-		// 			renderTimer = setTimeout(() => {
-		// 				console.log(`User stopped typing in ${input.id}`);
-		// 				this.requestRender();
-		// 			}, 2000);
-		// 		});
-		// 	});		
-		// } else {
-		// 	this.requestRender();
-		// }
 
 	}
 

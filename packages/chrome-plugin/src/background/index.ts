@@ -16,6 +16,7 @@ import {
 	type GetEnabledDomainsResponse,
 	type GetLintDescriptionsRequest,
 	type GetLintDescriptionsResponse,
+	type GetRenderMethodResponse,
 	type GetRenderMethodRequest,
 	type GetUserDictionaryResponse,
 	type IgnoreLintRequest,
@@ -278,7 +279,7 @@ async function handleGetRenderMethod(): Promise<GetRenderMethodResponse> {
 
 async function handleSetRenderMethod(req: SetRenderMethodRequest): Promise<UnitResponse> {
 	if (!Object.values(RenderMethod).includes(req.renderMethod)) {
-		throw new Error(`Invalid activation key: ${req.renderMethod}`);
+		throw new Error(`Invalid render method: ${req.renderMethod}`);
 	}
 	await setRenderMethod(req.renderMethod);
 
