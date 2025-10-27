@@ -1,7 +1,7 @@
 import type { Dialect, LintConfig } from 'harper.js';
 import type { UnpackedLint } from '../../../packages/lint-framework/src/lint/unpackLint';
 import { LRUCache } from 'lru-cache';
-import type { ActivationKey, RenderMethod } from './protocol';
+import type { ActivationKey, SpellCheckingMode } from './protocol';
 
 export default class ProtocolClient {
 	private static readonly lintCache = new LRUCache<string, Promise<any>>({
@@ -70,8 +70,8 @@ export default class ProtocolClient {
 		return (await chrome.runtime.sendMessage({ kind: 'getActivationKey' })).key;
 	}
 
-	public static async getRenderMethod(): Promise<RenderMethod> {
-		return (await chrome.runtime.sendMessage({ kind: 'getRenderMethod' })).renderMethod;
+	public static async getSpellCheckingMode(): Promise<SpellCheckingMode> {
+		return (await chrome.runtime.sendMessage({ kind: 'getSpellCheckingMode' })).spellCheckingMode;
 	}
 
 
@@ -79,8 +79,8 @@ export default class ProtocolClient {
 		await chrome.runtime.sendMessage({ kind: 'setActivationKey', key });
 	}
 
-	public static async setRenderMethod(renderMethod: RenderMethod): Promise<void> {
-		await chrome.runtime.sendMessage({ kind: 'setRenderMethod', renderMethod });
+	public static async setSpellCheckingMode(spellCheckingMode: SpellCheckingMode): Promise<void> {
+		await chrome.runtime.sendMessage({ kind: 'setSpellCheckingMode', spellCheckingMode });
 	}
 
 	public static async addToUserDictionary(words: string[]): Promise<void> {

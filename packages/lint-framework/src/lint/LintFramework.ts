@@ -7,7 +7,7 @@ import ProtocolClient from '../../../chrome-plugin/src/ProtocolClient';
 
 type ActivationKey = 'off' | 'shift' | 'control';
 
-type RenderMethod = 'default' | 'space' | 'stop';
+type SpellCheckingMode = 'default' | 'space' | 'stop';
 
 let renderTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -35,7 +35,7 @@ export default class LintFramework {
 	private actions: {
 		ignoreLint?: (hash: string) => Promise<void>;
 		getActivationKey?: () => Promise<ActivationKey>;
-		getRenderMethod?: () => Promise<RenderMethod>;
+		getSpellCheckingMode?: () => Promise<SpellCheckingMode>;
 		openOptions?: () => Promise<void>;
 		addToUserDictionary?: (words: string[]) => Promise<void>;
 	};
@@ -45,7 +45,7 @@ export default class LintFramework {
 		actions: {
 			ignoreLint?: (hash: string) => Promise<void>;
 			getActivationKey?: () => Promise<ActivationKey>;
-			getRenderMethod?: () => Promise<RenderMethod>;
+			getSpellCheckingMode?: () => Promise<SpellCheckingMode>;
 			openOptions?: () => Promise<void>;
 			addToUserDictionary?: (words: string[]) => Promise<void>;
 		},
@@ -91,7 +91,7 @@ export default class LintFramework {
 	}
 
 	async update() {
-		this.determineRenderMethod();
+		this.determineSpellCheckingMode();
 		this.requestLintUpdate();
 	}
 
@@ -126,7 +126,7 @@ export default class LintFramework {
 
 		this.lastLints = lintResults.filter((r) => r.target != null) as any;
 		this.lintRequested = false;
-		this.determineRenderMethod();
+		this.determineSpellCheckingMode();
 	}
 
 	public async addTarget(target: Node) {
@@ -186,9 +186,9 @@ export default class LintFramework {
 		}
 	}
 
-	private async determineRenderMethod() {
-		let renderMethod: RenderMethod = await ProtocolClient.getRenderMethod();
-		switch(renderMethod) {
+	private async determineSpellCheckingMode() {
+		let spellCheckingMode: SpellCheckingMode = await ProtocolClient.getSpellCheckingMode();
+		switch(spellCheckingMode) {
 			case 'space':
 				window.addEventListener('keyup', (event: KeyboardEvent) => {
 					let key = event.code;

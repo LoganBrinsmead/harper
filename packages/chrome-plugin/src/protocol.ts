@@ -19,8 +19,8 @@ export type Request =
 	| GetUserDictionaryRequest
 	| GetActivationKeyRequest
 	| SetActivationKeyRequest
-	| GetRenderMethodRequest
-	| SetRenderMethodRequest
+	| GetSpellCheckingModeRequest
+	| SetSpellCheckingModeRequest
 	| OpenOptionsRequest;
 
 export type Response =
@@ -34,7 +34,7 @@ export type Response =
 	| GetEnabledDomainsResponse
 	| GetUserDictionaryResponse
 	| GetActivationKeyResponse
-	| GetRenderMethodResponse;
+	| GetSpellCheckingModeResponse;
 
 export type LintRequest = {
 	kind: 'lint';
@@ -177,24 +177,24 @@ export type SetActivationKeyRequest = {
 	key: ActivationKey;
 };
 
-export enum RenderMethod {
+export enum SpellCheckingMode {
 	Default = 'default',
 	Space = 'space',
 	Stop = 'stop',
 }
 
-export type GetRenderMethodRequest = {
-	kind: 'getRenderMethod';
+export type GetSpellCheckingModeRequest = {
+	kind: 'getSpellCheckingMode';
 };
 
-export type GetRenderMethodResponse = {
-	kind: 'getRenderMethod';
-	renderMethod: RenderMethod;
+export type GetSpellCheckingModeResponse = {
+	kind: 'getSpellCheckingMode';
+	spellCheckingMode: SpellCheckingMode;
 };
 
-export type SetRenderMethodRequest = {
-	kind: 'setRenderMethod';
-	renderMethod: RenderMethod;
+export type SetSpellCheckingModeRequest = {
+	kind: 'setSpellCheckingMode';
+	spellCheckingMode: SpellCheckingMode;
 };
 
 

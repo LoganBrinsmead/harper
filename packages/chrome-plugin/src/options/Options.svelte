@@ -3,7 +3,7 @@ import { Button, Input, Select } from 'flowbite-svelte';
 import { Dialect, type LintConfig } from 'harper.js';
 import logo from '/logo.png';
 import ProtocolClient from '../ProtocolClient';
-import { ActivationKey, RenderMethod } from '../protocol';
+import { ActivationKey, SpellCheckingMode } from '../protocol';
 
 let lintConfig: LintConfig = $state({});
 let lintDescriptions: Record<string, string> = $state({});
@@ -13,7 +13,7 @@ let dialect = $state(Dialect.American);
 let defaultEnabled = $state(false);
 let activationKey: ActivationKey = $state(ActivationKey.Off);
 let userDict = $state('');
-let renderMethod: RenderMethod = $state(RenderMethod.Default);
+let spellCheckingMode: SpellCheckingMode = $state(SpellCheckingMode.Default);
 
 $effect(() => {
 	ProtocolClient.setLintConfig(lintConfig);
@@ -28,7 +28,7 @@ $effect(() => {
 });
 
 $effect(() => {
-	ProtocolClient.setRenderMethod(renderMethod);
+	ProtocolClient.setSpellCheckingMode(spellCheckingMode);
 });
 
 $effect(() => {
@@ -60,8 +60,8 @@ ProtocolClient.getActivationKey().then((d) => {
 	activationKey = d;
 });
 
-ProtocolClient.getRenderMethod().then((d) => {
-	renderMethod = d;
+ProtocolClient.getSpellCheckingMode().then((d) => {
+	spellCheckingMode = d;
 });
 
 ProtocolClient.getUserDictionary().then((d) => {
@@ -179,10 +179,10 @@ async function exportEnabledDomainsCSV() {
             <span class="font-medium">Spell Checking Mode</span>
             <span class="font-light">Controls the timing when spell checking is applied.</span>
           </div>
-          <Select size="sm" color="primary" class="w-44" bind:value={renderMethod}>
-            <option value={RenderMethod.Default}>Instant (Default)</option>
-            <option value={RenderMethod.Space}>After Spacebar Press</option>
-            <option value={RenderMethod.Stop}>After Typing Stops</option>
+          <Select size="sm" color="primary" class="w-44" bind:value={spellCheckingMode}>
+            <option value={SpellCheckingMode.Default}>Instant (Default)</option>
+            <option value={SpellCheckingMode.Space}>After Spacebar Press</option>
+            <option value={SpellCheckingMode.Stop}>After Typing Stops</option>
           </Select>
         </div>
       </div>

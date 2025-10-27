@@ -16,13 +16,13 @@ import {
 	type GetEnabledDomainsResponse,
 	type GetLintDescriptionsRequest,
 	type GetLintDescriptionsResponse,
-	type GetRenderMethodResponse,
-	type GetRenderMethodRequest,
+	type GetSpellCheckingModeResponse,
+	type GetSpellCheckingModeRequest,
 	type GetUserDictionaryResponse,
 	type IgnoreLintRequest,
 	type LintRequest,
 	type LintResponse,
-	RenderMethod,
+	SpellCheckingMode,
 	type Request,
 	type Response,
 	type SetActivationKeyRequest,
@@ -30,7 +30,7 @@ import {
 	type SetDefaultStatusRequest,
 	type SetDialectRequest,
 	type SetDomainStatusRequest,
-	type SetRenderMethodRequest,
+	type SetSpellCheckingModeRequest,
 	type SetUserDictionaryRequest,
 	type UnitResponse,
 } from '../protocol';
@@ -139,10 +139,10 @@ function handleRequest(message: Request): Promise<Response> {
 			return handleGetUserDictionary();
 		case 'setUserDictionary':
 			return handleSetUserDictionary(message);
-		case 'getRenderMethod':
-			return handleGetRenderMethod();
-		case 'setRenderMethod':
-			return handleSetRenderMethod(message);
+		case 'getSpellCheckingMode':
+			return handleGetSpellCheckingMode();
+		case 'setSpellCheckingMode':
+			return handleSetSpellCheckingMode(message);
 		case 'getActivationKey':
 			return handleGetActivationKey();
 		case 'setActivationKey':
@@ -271,17 +271,17 @@ async function handleSetActivationKey(req: SetActivationKeyRequest): Promise<Uni
 	return createUnitResponse();
 }
 
-async function handleGetRenderMethod(): Promise<GetRenderMethodResponse> {
-	const renderMethod = await getRenderMethod();
+async function handleGetSpellCheckingMode(): Promise<GetSpellCheckingModeResponse> {
+	const spellCheckingMode = await getSpellCheckingMode();
 
-	return { kind: 'getRenderMethod', renderMethod };
+	return { kind: 'getSpellCheckingMode', spellCheckingMode };
 }
 
-async function handleSetRenderMethod(req: SetRenderMethodRequest): Promise<UnitResponse> {
-	if (!Object.values(RenderMethod).includes(req.renderMethod)) {
-		throw new Error(`Invalid render method: ${req.renderMethod}`);
+async function handleSetSpellCheckingMode(req: SetSpellCheckingModeRequest): Promise<UnitResponse> {
+	if (!Object.values(SpellCheckingMode).includes(req.spellCheckingMode)) {
+		throw new Error(`Invalid spell checking mode: ${req.spellCheckingMode}`);
 	}
-	await setRenderMethod(req.renderMethod);
+	await setSpellCheckingMode(req.spellCheckingMode);
 
 	return createUnitResponse();
 }
@@ -333,13 +333,13 @@ async function setActivationKey(key: ActivationKey) {
 	await chrome.storage.local.set({ activationKey: key });
 }
 
-async function getRenderMethod(): Promise<RenderMethod> {
-	const resp = await chrome.storage.local.get({ renderMethod: RenderMethod.Default });
-	return resp.renderMethod;
+async function getSpellCheckingMode(): Promise<SpellCheckingMode> {
+	const resp = await chrome.storage.local.get({ spellCheckingMode: SpellCheckingMode.Default });
+	return resp.spellCheckingMode;
 }
 
-async function setRenderMethod(renderMethod: RenderMethod) {
-	await chrome.storage.local.set({ renderMethod: renderMethod });
+async function setSpellCheckingMode(spellCheckingMode: SpellCheckingMode) {
+	await chrome.storage.local.set({ spellCheckingMode: spellCheckingMode });
 }
 
 
