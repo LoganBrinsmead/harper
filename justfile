@@ -7,7 +7,7 @@ format:
 build-wasm:
   #!/usr/bin/env bash
   cd "{{justfile_directory()}}/harper-wasm"
-  RUSTFLAGS='--cfg getrandom_backend="wasm_js"' wasm-pack build --target web
+  wasm-pack build --target web
 
 # Build `harper.js` with all size optimizations available.
 build-harperjs: build-wasm 
@@ -25,7 +25,7 @@ build-harperjs: build-wasm
   ./docs.sh
 
 # Build the browser lint framework module
-build-lint-framework:
+build-lint-framework: build-harperjs
   #!/usr/bin/env bash
   set -eo pipefail
 
@@ -52,6 +52,7 @@ test-obsidian: build-obsidian
 
   pnpm install
   cd "{{justfile_directory()}}/packages/obsidian-plugin"
+  pnpm playwright install
   pnpm test
 
 dev-wp: build-harperjs
@@ -260,8 +261,12 @@ check-rust:
   cargo fmt -- --check
   cargo clippy -- -Dwarnings -D clippy::dbg_macro -D clippy::needless_raw_string_hashes
 
+  cargo hack check --each-feature
+
 # Perform format and type checking.
-check: check-rust build-web
+check: check-rust check-js build-web
+
+check-js: build-harperjs build-lint-framework
   #!/usr/bin/env bash
   set -eo pipefail
 
@@ -281,7 +286,6 @@ precommit: check test build-harperjs build-obsidian build-web build-wp build-fir
   set -eo pipefail
 
   cargo build --all-targets
-  cargo hack check --each-feature
 
 # Install `harper-cli` and `harper-ls` to your machine via `cargo`
 install:
@@ -298,9 +302,11 @@ dogfood:
     ./target/release/harper-cli lint $file
   done
 
-# Test everything.
-test: test-harperjs test-vscode test-obsidian test-chrome-plugin test-firefox-plugin
+test-rust:
   cargo test
+
+# Test everything.
+test: test-rust test-harperjs test-vscode test-obsidian test-chrome-plugin test-firefox-plugin
 
 # Use `harper-cli` to parse a provided file and print out the resulting tokens.
 parse file:

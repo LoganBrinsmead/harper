@@ -1,5 +1,6 @@
-import type { Dialect, LintConfig } from 'harper.js';
 import type { UnpackedLint } from '../../../packages/lint-framework/src/lint/unpackLint';
+import type { Dialect, LintConfig, Summary } from 'harper.js';
+import type { UnpackedLintGroups } from 'lint-framework';
 
 export type Request =
 	| LintRequest
@@ -21,7 +22,9 @@ export type Request =
 	| SetActivationKeyRequest
 	| GetSpellCheckingModeRequest
 	| SetSpellCheckingModeRequest
-	| OpenOptionsRequest;
+	| OpenOptionsRequest
+	| OpenReportErrorRequest
+	| PostFormDataRequest;
 
 export type Response =
 	| LintResponse
@@ -34,7 +37,9 @@ export type Response =
 	| GetEnabledDomainsResponse
 	| GetUserDictionaryResponse
 	| GetActivationKeyResponse
+	| PostFormDataResponse
 	| GetSpellCheckingModeResponse;
+
 
 export type LintRequest = {
 	kind: 'lint';
@@ -44,7 +49,7 @@ export type LintRequest = {
 
 export type LintResponse = {
 	kind: 'lints';
-	lints: UnpackedLint[];
+	lints: UnpackedLintGroups;
 };
 
 export type GetConfigRequest = {
@@ -117,6 +122,8 @@ export type SetDomainStatusRequest = {
 	kind: 'setDomainStatus';
 	domain: string;
 	enabled: boolean;
+	/** Dictates whether this should override a previous setting. */
+	overrideValue: boolean;
 };
 
 export type SetDefaultStatusRequest = {
@@ -172,6 +179,11 @@ export type GetActivationKeyResponse = {
 	key: ActivationKey;
 };
 
+export type PostFormDataResponse = {
+	kind: 'postFormData';
+	success: boolean;
+};
+
 export type SetActivationKeyRequest = {
 	kind: 'setActivationKey';
 	key: ActivationKey;
@@ -200,4 +212,17 @@ export type SetSpellCheckingModeRequest = {
 
 export type OpenOptionsRequest = {
 	kind: 'openOptions';
+};
+
+export type OpenReportErrorRequest = {
+	kind: 'openReportError';
+	example: string;
+	rule_id: string;
+	feedback: string;
+};
+
+export type PostFormDataRequest = {
+	kind: 'postFormData';
+	url: string;
+	formData: Record<string, string>;
 };

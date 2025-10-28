@@ -1,5 +1,5 @@
 use crate::linting::tests::{
-    assert_lint_count, assert_nth_suggestion_result, assert_suggestion_result,
+    assert_lint_count, assert_no_lints, assert_nth_suggestion_result, assert_suggestion_result,
     assert_top3_suggestion_result,
 };
 
@@ -907,6 +907,88 @@ fn corrects_low_hanging_fruits_space() {
     )
 }
 
+// ManagerialReins
+#[test]
+fn fixes_managerial_reigns_basic() {
+    assert_suggestion_result(
+        "She grabbed the managerial reigns during the crisis.",
+        lint_group(),
+        "She grabbed the managerial reins during the crisis.",
+    );
+}
+
+#[test]
+fn fixes_managerial_reigns_sentence_start() {
+    assert_suggestion_result(
+        "Managerial reigns are never easy to hand over.",
+        lint_group(),
+        "Managerial reins are never easy to hand over.",
+    );
+}
+
+#[test]
+fn fixes_managerial_reigns_with_article() {
+    assert_suggestion_result(
+        "The managerial reigns belong to Carla now.",
+        lint_group(),
+        "The managerial reins belong to Carla now.",
+    );
+}
+
+#[test]
+fn fixes_managerial_reigns_with_comma() {
+    assert_suggestion_result(
+        "By winter, he held the managerial reigns, and morale improved.",
+        lint_group(),
+        "By winter, he held the managerial reins, and morale improved.",
+    );
+}
+
+#[test]
+fn fixes_managerial_reigns_question() {
+    assert_suggestion_result(
+        "Who will hold the managerial reigns after April?",
+        lint_group(),
+        "Who will hold the managerial reins after April?",
+    );
+}
+
+#[test]
+fn fixes_managerial_reigns_in_quotes() {
+    assert_suggestion_result(
+        "\"managerial reigns\" showed up in the draft notes.",
+        lint_group(),
+        "\"managerial reins\" showed up in the draft notes.",
+    );
+}
+
+#[test]
+fn counts_managerial_reigns_error() {
+    assert_lint_count(
+        "They debated who should manage the managerial reigns for the quarter.",
+        lint_group(),
+        1,
+    );
+}
+
+#[test]
+fn counts_managerial_reigns_caps() {
+    assert_lint_count("Their memo shouted MANAGERIAL REIGNS.", lint_group(), 1);
+}
+
+#[test]
+fn allows_managerial_reins_correct() {
+    assert_no_lints(
+        "He kept the managerial reins despite the reshuffle.",
+        lint_group(),
+    );
+}
+
+#[test]
+fn allows_reigns_without_managerial() {
+    assert_no_lints("Legends of ancient reigns filled the museum.", lint_group());
+}
+
 // Monumentous
 #[test]
 fn detect_monumentous_atomic() {
@@ -1358,6 +1440,93 @@ fn correct_to_a_great_length() {
 // ToTheMannerBorn
 // -none-
 
+// TongueInCheek
+#[test]
+fn tongue_and_cheek_plain() {
+    assert_suggestion_result(
+        "The remark was entirely tongue and cheek.",
+        lint_group(),
+        "The remark was entirely tongue in cheek.",
+    );
+}
+
+#[test]
+fn tongue_and_cheek_with_article() {
+    assert_suggestion_result(
+        "It was a tongue and cheek response.",
+        lint_group(),
+        "It was a tongue in cheek response.",
+    );
+}
+
+#[test]
+fn tongue_and_cheek_with_comma() {
+    assert_suggestion_result(
+        "He delivered it tongue and cheek, expecting a laugh.",
+        lint_group(),
+        "He delivered it tongue in cheek, expecting a laugh.",
+    );
+}
+
+#[test]
+fn tongue_and_cheek_in_quotes() {
+    assert_suggestion_result(
+        "\"tongue and cheek\" jokes are tough to read.",
+        lint_group(),
+        "\"tongue in cheek\" jokes are tough to read.",
+    );
+}
+
+#[test]
+fn tongue_and_cheek_all_caps() {
+    assert_suggestion_result(
+        "Their tone was TONGUE AND CHEEK all night.",
+        lint_group(),
+        "Their tone was TONGUE IN CHEEK all night.",
+    );
+}
+
+#[test]
+fn tongue_and_cheek_capitalized() {
+    assert_suggestion_result(
+        "Tongue and cheek banter kept the meeting light.",
+        lint_group(),
+        "Tongue in cheek banter kept the meeting light.",
+    );
+}
+
+#[test]
+fn tongue_and_cheek_in_parentheses() {
+    assert_suggestion_result(
+        "Her note (totally tongue and cheek) made us smile.",
+        lint_group(),
+        "Her note (totally tongue in cheek) made us smile.",
+    );
+}
+
+#[test]
+fn tongue_and_cheek_question() {
+    assert_suggestion_result(
+        "Was that tongue and cheek or sincere?",
+        lint_group(),
+        "Was that tongue in cheek or sincere?",
+    );
+}
+
+#[test]
+fn tongue_in_cheek_is_allowed() {
+    assert_lint_count(
+        "Their comments were deliberately tongue in cheek.",
+        lint_group(),
+        0,
+    );
+}
+
+#[test]
+fn tongue_in_cheek_hyphenated_is_allowed() {
+    assert_lint_count("That was a tongue-in-cheek reply.", lint_group(), 0);
+}
+
 // Towards
 // -none-
 
@@ -1478,6 +1647,20 @@ fn thanks_lot() {
 #[test]
 fn thanks_a_lot_clean() {
     assert_lint_count("thanks a lot", lint_group(), 0);
+}
+
+#[test]
+fn fixes_to_worry_about() {
+    assert_top3_suggestion_result(
+        "I don't want you to worried about it.",
+        lint_group(),
+        "I don't want you to worry about it.",
+    );
+    assert_top3_suggestion_result(
+        "I don't want you to worried about it.",
+        lint_group(),
+        "I don't want you too worried about it.",
+    );
 }
 
 // WroughtIron

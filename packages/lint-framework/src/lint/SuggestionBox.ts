@@ -4,7 +4,7 @@ import bookDownSvg from '../assets/bookDownSvg';
 import type { IgnorableLintBox, LintBox } from './Box';
 import lintKindColor from './lintKindColor';
 // Decoupled: actions passed in by framework consumer
-import type { UnpackedSuggestion } from './unpackLint';
+import type { UnpackedLint, UnpackedSuggestion } from './unpackLint';
 
 var FocusHook: any = function () {};
 FocusHook.prototype.hook = function (node: any, _propertyName: any, _previousValue: any) {
@@ -50,6 +50,7 @@ function header(
 	color: string,
 	onClose: () => void,
 	openOptions?: () => Promise<void>,
+	rule?: string,
 ): any {
 	const closeButton = h(
 		'button',
@@ -79,7 +80,23 @@ function header(
 
 	const controlsChildren = settingsButton ? [settingsButton, closeButton] : [closeButton];
 	const controls = h('div', { className: 'harper-controls' }, controlsChildren);
-	const titleEl = h('span', {}, title);
+	const trimmedRule = rule?.trim();
+	const titleChildren = [title] as any[];
+	if (trimmedRule) {
+		titleChildren.push(
+			h(
+				'span',
+				{
+					className: 'harper-info-icon',
+					title: trimmedRule,
+					'aria-label': `Grammar rule: ${trimmedRule}`,
+					role: 'img',
+				},
+				'i',
+			),
+		);
+	}
+	const titleEl = h('span', { className: 'harper-title' }, titleChildren);
 
 	return h(
 		'div',
@@ -110,6 +127,7 @@ function button(
 			style: extraStyle,
 			onclick: onClick,
 			title: desc,
+			type: 'button',
 			'aria-label': desc,
 			...extraProps,
 		},
@@ -167,6 +185,26 @@ function suggestions(
 	});
 }
 
+function reportProblemButton(reportError?: () => Promise<void>): any {
+	if (!reportError) {
+		return undefined;
+	}
+
+	return h(
+		'button',
+		{
+			className: 'harper-report-link',
+			type: 'button',
+			onclick: () => {
+				reportError();
+			},
+			title: 'Report an issue with this lint',
+			'aria-label': 'Report an issue with this lint',
+		},
+		'Report',
+	);
+}
+
 function styleTag() {
 	return h('style', { id: 'harper-suggestion-style' }, [
 		`code{
@@ -200,6 +238,24 @@ function styleTag() {
       padding-bottom:4px;
       margin-bottom:4px;
       user-select:none
+      }
+      .harper-title{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      }
+      .harper-info-icon{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:16px;
+      height:16px;
+      border-radius:50%;
+      background:#eaeef2;
+      color:#1f2328;
+      font-size:11px;
+      font-weight:700;
+      cursor:default;
       }
       .harper-body{
       font-size:14px;
@@ -286,6 +342,7 @@ function styleTag() {
       box-shadow:0 4px 12px rgba(1,4,9,0.85)
       }
       .harper-header{color:#e6edf3}
+      .harper-info-icon{background:#30363d;color:#c9d1d9}
       .harper-body{color:#8b949e}
       .harper-btn{
       background:#21262d;
@@ -304,6 +361,22 @@ function styleTag() {
       .harper-hint-drawer{ border-top-color:#30363d; background:#151b23; color:#9aa4af; }
       .harper-hint-icon{ background:#3a2f0b; color:#f2cc60; }
       .harper-hint-title{ color:#e6edf3; }
+      }
+      .harper-report-link{
+      margin-top:8px;
+      align-self:flex-start;
+      background:none;
+      border:none;
+      padding:0;
+      color:#0969da;
+      font-size:13px;
+      font-weight:600;
+      cursor:pointer;
+      }
+      .harper-report-link:hover{text-decoration:underline;}
+      .harper-report-link:focus{outline:2px solid #0969da; outline-offset:2px;}
+      @media (prefers-color-scheme:dark){
+      .harper-report-link{color:#58a6ff;}
       }`,
 	]);
 }
@@ -322,6 +395,7 @@ export default function SuggestionBox(
 	actions: {
 		openOptions?: () => Promise<void>;
 		addToUserDictionary?: (words: string[]) => Promise<void>;
+		reportError?: (lint: UnpackedLint, ruleId: string) => Promise<void>;
 	},
 	hint: string | null,
 	close: () => void,
@@ -355,6 +429,7 @@ export default function SuggestionBox(
 				lintKindColor(box.lint.lint_kind),
 				close,
 				actions.openOptions,
+				box.rule,
 			),
 			body(box.lint.message_html),
 			footer(
@@ -370,6 +445,14 @@ export default function SuggestionBox(
 				],
 			),
 			hintDrawer(hint),
+			actions.reportError
+				? reportProblemButton(() => {
+						if (actions.reportError) {
+							return actions.reportError(box.lint, box.rule);
+						}
+						return Promise.resolve();
+					})
+				: undefined,
 		],
 	);
 }

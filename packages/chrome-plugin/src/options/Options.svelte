@@ -16,7 +16,7 @@ let userDict = $state('');
 let spellCheckingMode: SpellCheckingMode = $state(SpellCheckingMode.Default);
 
 $effect(() => {
-	ProtocolClient.setLintConfig(lintConfig);
+	ProtocolClient.setLintConfig($state.snapshot(lintConfig));
 });
 
 $effect(() => {

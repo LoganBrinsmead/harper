@@ -1,10 +1,10 @@
 import { BinaryModule, Dialect, type LintConfig, LocalLinter } from 'harper.js';
-import { unpackLint } from 'lint-framework';
+import { type UnpackedLintGroups, unpackLint } from 'lint-framework';
+import type { PopupState } from '../PopupState';
 import {
 	ActivationKey,
 	type AddToUserDictionaryRequest,
 	createUnitResponse,
-	type GetActivationKeyRequest,
 	type GetActivationKeyResponse,
 	type GetConfigRequest,
 	type GetConfigResponse,
@@ -23,6 +23,9 @@ import {
 	type LintRequest,
 	type LintResponse,
 	SpellCheckingMode,
+	type OpenReportErrorRequest,
+	type PostFormDataRequest,
+	type PostFormDataResponse,
 	type Request,
 	type Response,
 	type SetActivationKeyRequest,
@@ -94,6 +97,8 @@ async function enableDefaultDomains() {
 		'core.trac.wordpress.org',
 		'write.ellipsus.com',
 		'www.facebook.com',
+		'www.upwork.com',
+		'news.ycombinator.com',
 	];
 
 	for (const item of defaultEnabledDomains) {
@@ -147,21 +152,31 @@ function handleRequest(message: Request): Promise<Response> {
 			return handleGetActivationKey();
 		case 'setActivationKey':
 			return handleSetActivationKey(message);
+		case 'openReportError':
+			return handleOpenReportError(message);
 		case 'openOptions':
 			chrome.runtime.openOptionsPage();
-			return createUnitResponse();
+			return Promise.resolve(createUnitResponse());
+		case 'postFormData':
+			return handlePostFormData(message);
 	}
 }
 
 /** Handle a request for linting. */
 async function handleLint(req: LintRequest): Promise<LintResponse> {
 	if (!(await enabledForDomain(req.domain))) {
-		return { kind: 'lints', lints: [] };
+		return { kind: 'lints', lints: {} };
 	}
 
-	const lints = await linter.lint(req.text);
-	const unpackedLints = await Promise.all(lints.map((l) => unpackLint(req.text, l, linter)));
-	return { kind: 'lints', lints: unpackedLints };
+	const grouped = await linter.organizedLints(req.text);
+	const unpackedEntries = await Promise.all(
+		Object.entries(grouped).map(async ([source, lints]) => {
+			const unpacked = await Promise.all(lints.map((lint) => unpackLint(req.text, lint, linter)));
+			return [source, unpacked] as const;
+		}),
+	);
+	const unpackedBySource = Object.fromEntries(unpackedEntries) as UnpackedLintGroups;
+	return { kind: 'lints', lints: unpackedBySource };
 }
 
 async function handleGetConfig(req: GetConfigRequest): Promise<GetConfigResponse> {
@@ -220,7 +235,7 @@ async function handleGetDomainStatus(
 }
 
 async function handleSetDomainStatus(req: SetDomainStatusRequest): Promise<UnitResponse> {
-	await setDomainEnable(req.domain, req.enabled);
+	await setDomainEnable(req.domain, req.enabled, req.overrideValue);
 
 	return createUnitResponse();
 }
@@ -282,10 +297,46 @@ async function handleSetSpellCheckingMode(req: SetSpellCheckingModeRequest): Pro
 		throw new Error(`Invalid spell checking mode: ${req.spellCheckingMode}`);
 	}
 	await setSpellCheckingMode(req.spellCheckingMode);
+}
+async function handleOpenReportError(req: OpenReportErrorRequest): Promise<UnitResponse> {
+	const popupState: PopupState = {
+		page: 'report-error',
+		example: req.example,
+		rule_id: req.rule_id,
+		feedback: req.feedback,
+	};
+
+	await chrome.storage.local.set({ popupState });
+
+	if (chrome.action?.openPopup) {
+		try {
+			await chrome.action.openPopup();
+		} catch (error) {
+			console.error('Failed to open popup for report error', error);
+		}
+	}
 
 	return createUnitResponse();
 }
 
+async function handlePostFormData(req: PostFormDataRequest): Promise<PostFormDataResponse> {
+	const formData = new FormData();
+	for (const [key, value] of Object.entries(req.formData)) {
+		formData.append(key, value);
+	}
+
+	try {
+		const response = await fetch(req.url, {
+			method: 'POST',
+			body: formData,
+		});
+
+		return { kind: 'postFormData', success: response.ok };
+	} catch (error) {
+		console.error('Failed to post form data', error);
+		return { kind: 'postFormData', success: false };
+	}
+}
 
 /** Set the lint configuration inside the global `linter` and in permanent storage. */
 async function setLintConfig(lintConfig: LintConfig): Promise<void> {
@@ -366,16 +417,27 @@ function formatDomainKey(domain: string): string {
 }
 
 /** Check if Harper has been enabled for a given domain. */
-async function enabledForDomain(domain: string): Promise<boolean> {
+async function enabledForDomain(domain: string): Promise<boolean | null> {
 	const req = await chrome.storage.local.get({
 		[formatDomainKey(domain)]: await enabledByDefault(),
 	});
 	return req[formatDomainKey(domain)];
 }
 
-/** Set whether Harper is enabled for a given domain. */
-async function setDomainEnable(domain: string, status: boolean) {
-	await chrome.storage.local.set({ [formatDomainKey(domain)]: status });
+/** Set whether Harper is enabled for a given domain.
+ *
+ * @param overrideValue dictates whether this should override a previous setting.
+ * */
+async function setDomainEnable(domain: string, status: boolean, overrideValue = true) {
+	let shouldSet = !(await isDomainSet(domain));
+
+	if (overrideValue) {
+		shouldSet = true;
+	}
+
+	if (shouldSet) {
+		await chrome.storage.local.set({ [formatDomainKey(domain)]: status });
+	}
 }
 
 /** Set whether Harper is enabled by default. */

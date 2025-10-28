@@ -58,7 +58,7 @@ pub fn lint_group() -> LintGroup {
             "Corrects `an` to `and` after `ahead`."
         ),
         "AllOfASudden" => (
-            ["all of the sudden"],
+            ["all of the sudden", "all of sudden"],
             ["all of a sudden"],
             "The phrase is `all of a sudden`, meaning `unexpectedly`.",
             "Corrects `all of the sudden` to `all of a sudden`.",
@@ -752,6 +752,13 @@ pub fn lint_group() -> LintGroup {
             "Corrects non-standard variants of `low-hanging fruit`.",
             LintKind::Usage
         ),
+        "ManagerialReins" => (
+            ["managerial reigns"],
+            ["managerial reins"],
+            "Swap in `reins` when talking about control of a team or project.",
+            "Corrects the eggcorn `managerial reigns` to the idiomatic `managerial reins`.",
+            LintKind::Eggcorn
+        ),
         "Monumentous" => (
             ["monumentous"],
             ["momentous", "monumental"],
@@ -1089,6 +1096,13 @@ pub fn lint_group() -> LintGroup {
             "Corrects `to the manor born` to `to the manner born`, ensuring the intended meaning of being naturally suited to a way of life.",
             LintKind::Eggcorn
         ),
+        "TongueInCheek" => (
+            ["tongue and cheek"],
+            ["tongue in cheek"],
+            "Use `tongue in cheek` for the idiom.",
+            "Corrects the idiom when `and` replaces the needed preposition.",
+            LintKind::WordChoice
+        ),
         "Towards" => (
             ["to towards"],
             ["towards"],
@@ -1174,6 +1188,12 @@ pub fn lint_group() -> LintGroup {
             "Prefer the standard term `wrought iron`.",
             "`Wrought iron` is low-carbon, malleable iron used for decorative work; variants like `rod iron` or `rot iron` are phonetic misspellings that may confuse readers.",
             LintKind::Eggcorn
+        ),
+        "ToWorryAbout" => (
+            ["to worried about"],
+            ["to worry about", "too worried about"],
+            "Did you mean the progressive form?",
+            "Fixes incorrect use of `to worried about`."
         ),
         "The" => (
             ["teh"],
