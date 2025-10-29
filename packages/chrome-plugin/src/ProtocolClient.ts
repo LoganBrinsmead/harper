@@ -51,8 +51,16 @@ export default class ProtocolClient {
 		return (await chrome.runtime.sendMessage({ kind: 'getDomainStatus', domain })).enabled;
 	}
 
-	public static async setDomainEnabled(domain: string, enabled: boolean): Promise<void> {
-		await chrome.runtime.sendMessage({ kind: 'setDomainStatus', enabled, domain });
+	/** Set whether Harper is enabled for a given domain.
+	 *
+	 * @param overrideValue dictates whether this should override a previous setting.
+	 * */
+	public static async setDomainEnabled(
+		domain: string,
+		enabled: boolean,
+		overrideValue = true,
+	): Promise<void> {
+		await chrome.runtime.sendMessage({ kind: 'setDomainStatus', enabled, domain, overrideValue });
 	}
 
 	public static async getDefaultEnabled(): Promise<boolean> {
@@ -108,8 +116,28 @@ export default class ProtocolClient {
 		this.lintCache.clear();
 	}
 
+	public static async openReportError(
+		example: string,
+		ruleId: string,
+		feedback: string,
+	): Promise<void> {
+		await chrome.runtime.sendMessage({
+			kind: 'openReportError',
+			example,
+			rule_id: ruleId,
+			feedback,
+		});
+	}
+
 	public static async openOptions(): Promise<void> {
 		// Use background to open options to support content scripts reliably
 		await chrome.runtime.sendMessage({ kind: 'openOptions' });
+	}
+
+	public static async postFormData(
+		url: string,
+		formData: Record<string, string>,
+	): Promise<boolean> {
+		return (await chrome.runtime.sendMessage({ kind: 'postFormData', url, formData })).success;
 	}
 }

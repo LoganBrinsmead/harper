@@ -21,7 +21,9 @@ export type Request =
 	| SetActivationKeyRequest
 	| GetHotkeyRequest
 	| SetHotkeyRequest
-	| OpenOptionsRequest;
+	| OpenOptionsRequest
+	| OpenReportErrorRequest
+	| PostFormDataRequest;
 
 export type Response =
 	| LintResponse
@@ -34,7 +36,8 @@ export type Response =
 	| GetEnabledDomainsResponse
 	| GetUserDictionaryResponse
 	| GetHotkeyResponse
-	| GetActivationKeyResponse;
+	| GetActivationKeyResponse
+	| PostFormDataResponse;
 
 export type LintRequest = {
 	kind: 'lint';
@@ -117,6 +120,8 @@ export type SetDomainStatusRequest = {
 	kind: 'setDomainStatus';
 	domain: string;
 	enabled: boolean;
+	/** Dictates whether this should override a previous setting. */
+	overrideValue: boolean;
 };
 
 export type SetDefaultStatusRequest = {
@@ -176,6 +181,11 @@ export type GetActivationKeyResponse = {
 	key: ActivationKey;
 };
 
+export type PostFormDataResponse = {
+	kind: 'postFormData';
+	success: boolean;
+};
+
 export type SetActivationKeyRequest = {
 	kind: 'setActivationKey';
 	key: ActivationKey;
@@ -200,4 +210,16 @@ export type Modifier = 'Ctrl' | 'Shift' | 'Alt';
 export type Hotkey = {
   modifiers: Modifier[];
   key: string;
+};
+export type OpenReportErrorRequest = {
+	kind: 'openReportError';
+	example: string;
+	rule_id: string;
+	feedback: string;
+};
+
+export type PostFormDataRequest = {
+	kind: 'postFormData';
+	url: string;
+	formData: Record<string, string>;
 };

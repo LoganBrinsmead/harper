@@ -43,6 +43,7 @@ export default class LintFramework {
 		getHotkey?: () => Promise<Hotkey>;
 		openOptions?: () => Promise<void>;
 		addToUserDictionary?: (words: string[]) => Promise<void>;
+		reportError?: (lint: UnpackedLint) => Promise<void>;
 	};
 
 	constructor(
@@ -53,6 +54,7 @@ export default class LintFramework {
 			getHotkey?: () => Promise<Hotkey>;
 			openOptions?: () => Promise<void>;
 			addToUserDictionary?: (words: string[]) => Promise<void>;
+			reportError?: () => Promise<void>;
 		},
 	) {
 		this.lintProvider = lintProvider;
@@ -62,6 +64,7 @@ export default class LintFramework {
 			getActivationKey: actions.getActivationKey,
 			openOptions: actions.openOptions,
 			addToUserDictionary: actions.addToUserDictionary,
+			reportError: actions.reportError,
 		});
 		this.targets = new Set();
 		this.scrollableAncestors = new Set();
