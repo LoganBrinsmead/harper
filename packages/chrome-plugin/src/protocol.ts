@@ -1,5 +1,4 @@
-import type { UnpackedLint } from '../../../packages/lint-framework/src/lint/unpackLint';
-import type { Dialect, LintConfig, Summary } from 'harper.js';
+import type { Dialect, LintConfig } from 'harper.js';
 import type { UnpackedLintGroups } from 'lint-framework';
 
 export type Request =

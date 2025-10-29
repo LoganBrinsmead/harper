@@ -1,5 +1,4 @@
 import type { Dialect, LintConfig } from 'harper.js';
-import type { UnpackedLint } from '../../../packages/lint-framework/src/lint/unpackLint';
 import type { UnpackedLintGroups } from 'lint-framework';
 import { LRUCache } from 'lru-cache';
 import type { ActivationKey, SpellCheckingMode } from './protocol';
