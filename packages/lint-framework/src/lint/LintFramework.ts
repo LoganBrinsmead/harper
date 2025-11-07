@@ -38,7 +38,8 @@ export default class LintFramework {
 		getSpellCheckingMode?: () => Promise<SpellCheckingMode>;
 		openOptions?: () => Promise<void>;
 		addToUserDictionary?: (words: string[]) => Promise<void>;
-		reportError?: (lint: UnpackedLint) => Promise<void>;
+		reportError?: (lint: UnpackedLint, ruleId: string) => Promise<void>;
+		setRuleEnabled?: (ruleId: string, enabled: boolean) => Promise<void> | void;
 	};
 
 	constructor(
@@ -49,7 +50,8 @@ export default class LintFramework {
 			getSpellCheckingMode?: () => Promise<SpellCheckingMode>;
 			openOptions?: () => Promise<void>;
 			addToUserDictionary?: (words: string[]) => Promise<void>;
-			reportError?: () => Promise<void>;
+			reportError?: (lint: UnpackedLint, ruleId: string) => Promise<void>;
+			setRuleEnabled?: (ruleId: string, enabled: boolean) => Promise<void> | void;
 		},
 	) {
 		this.lintProvider = lintProvider;
@@ -60,6 +62,7 @@ export default class LintFramework {
 			openOptions: actions.openOptions,
 			addToUserDictionary: actions.addToUserDictionary,
 			reportError: actions.reportError,
+			setRuleEnabled: actions.setRuleEnabled,
 		});
 		this.targets = new Set();
 		this.scrollableAncestors = new Set();
